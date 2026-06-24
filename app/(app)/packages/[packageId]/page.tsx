@@ -30,8 +30,11 @@ export default async function PackageDetailPage({
   const canManage =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
     stagePackage.partners?.alliance_manager_id === user.id;
+  const isCurrentStagePackage =
+    stagePackage.stage_gate_id === stagePackage.partners?.current_stage_id;
   const editable =
     canManage &&
+    isCurrentStagePackage &&
     ["draft", "in_progress", "ready_for_review", "rework_required"].includes(
       stagePackage.status,
     );
@@ -57,6 +60,12 @@ export default async function PackageDetailPage({
         </Button>
         <Badge variant="secondary">{humanize(stagePackage.status)}</Badge>
       </div>
+
+      {!isCurrentStagePackage ? (
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+          This is a prior-stage package and is read-only.
+        </div>
+      ) : null}
 
       <PackageEditor
         editable={editable}

@@ -110,6 +110,7 @@ export default async function PartnerDetailPage({
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <SummaryItem label="Website" value={partner.website ?? "Not set"} />
             <SummaryItem
               label="Current Stage"
               value={partner.stage_gates ? `${partner.stage_gates.code} - ${partner.stage_gates.name}` : "Not set"}
@@ -118,7 +119,6 @@ export default async function PartnerDetailPage({
             <SummaryItem label="Package Status" value={humanize(currentPackage?.status)} />
             <SummaryItem label="Approval Status" value={humanize(currentApproval?.status)} />
             <SummaryItem label="Next Step Due" value={nextStepDue} />
-            <SummaryItem label="Updated" value={formatDateTime(partner.created_at)} />
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
