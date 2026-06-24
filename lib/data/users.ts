@@ -18,7 +18,7 @@ export type UserListRow = {
 };
 
 const userSelect =
-  "id, name, email, department, region, status, last_login_at, user_roles(roles(id, code, name))";
+  "id, name, email, department, region, status, last_login_at, user_roles!user_roles_user_id_fkey(roles!user_roles_role_id_fkey(id, code, name))";
 
 export async function getUsers() {
   const supabase = await createSupabaseServerClient();

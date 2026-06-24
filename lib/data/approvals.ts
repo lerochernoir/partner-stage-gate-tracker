@@ -40,9 +40,9 @@ const approvalSelect = `
   requested_at,
   completed_at,
   final_decision,
-  partners(id, name),
-  stage_gates(id, code, name),
-  stage_gate_packages(id, package_version, status),
+  partners!approvals_partner_id_fkey(id, name),
+  stage_gates!approvals_stage_gate_id_fkey(id, code, name),
+  stage_gate_packages!approvals_stage_gate_package_id_fkey(id, package_version, status),
   approval_steps(
     id,
     step_order,
@@ -52,8 +52,8 @@ const approvalSelect = `
     decided_at,
     is_required,
     approver_user_id,
-    roles(id, code, name),
-    users(id, name, email)
+    roles!approval_steps_approver_role_id_fkey(id, code, name),
+    users!approval_steps_approver_user_id_fkey(id, name, email)
   )
 `;
 

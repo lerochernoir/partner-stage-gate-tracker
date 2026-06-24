@@ -56,10 +56,10 @@ const packageListSelect = `
   submitted_at,
   partner_id,
   stage_gate_id,
-  partners(id, name),
-  stage_gates(id, code, name),
-  approvals(id, status),
-  decision_logs(id, decision_outcome)
+  partners!stage_gate_packages_partner_id_fkey(id, name),
+  stage_gates!stage_gate_packages_stage_gate_id_fkey(id, code, name),
+  approvals!approvals_stage_gate_package_id_fkey(id, status),
+  decision_logs!decision_logs_stage_gate_package_id_fkey(id, decision_outcome)
 `;
 
 export async function getPackages() {
@@ -108,8 +108,8 @@ export async function getPackageById(packageId: string) {
         recommendation,
         approval_id,
         decision_log_id,
-        partners(id, name, status, current_stage_id, alliance_manager_id),
-        stage_gates(id, code, name),
+        partners!stage_gate_packages_partner_id_fkey(id, name, status, current_stage_id, alliance_manager_id),
+        stage_gates!stage_gate_packages_stage_gate_id_fkey(id, code, name),
         stage_gate_package_sections(
           id,
           section_type,
