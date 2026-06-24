@@ -1,21 +1,22 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { InitialRationalePreview } from "@/components/partners/InitialRationalePreview";
+import { StageWorkflowPanel } from "@/components/partners/StageWorkflowPanel";
 import {
   PartnerStatusBadge,
   StageBadge,
   TierBadge,
 } from "@/components/shared/status-badges";
-import { InitialRationalePreview } from "@/components/partners/InitialRationalePreview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sg0WorkflowPanel } from "@/components/workflow/Sg0WorkflowPanel";
+import { createStageGatePackageAction } from "@/lib/actions/packages";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { getPartnerCurrentRequirements } from "@/lib/data/lifecycle";
 import { getPartnerById } from "@/lib/data/partners";
-import { getSg0NextAction, getSg0WorkflowState } from "@/lib/data/sg0-workflow";
-import { formatDateTime, humanize } from "@/lib/format";
+import { getPartnerPackages } from "@/lib/data/packages";
+import { formatDateTime } from "@/lib/format";
 
 export default async function PartnerDetailPage({
   params,
@@ -24,18 +25,23 @@ export default async function PartnerDetailPage({
 }) {
   const user = await requireUser();
   const { partnerId } = await params;
-  const partner = await getPartnerById(partnerId);
+  const [partner, requirements, packages] = await Promise.all([
+    getPartnerById(partnerId),
+    getPartnerCurrentRequirements(partnerId),
+    getPartnerPackages(partnerId),
+  ]);
 
   if (!partner) {
     notFound();
   }
 
-  const workflow = await getSg0WorkflowState(partner);
-  const requirements = await getPartnerCurrentRequirements(partner.id);
-  const nextAction = getSg0NextAction(partner.id, workflow, user);
   const canEdit =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
     partner.alliance_manager_id === user.id;
+  const createPackageAction = async () => {
+    "use server";
+    await createStageGatePackageAction(partner.id);
+  };
 
   return (
     <div className="grid gap-6">
@@ -91,45 +97,13 @@ export default async function PartnerDetailPage({
         </CardContent>
       </Card>
 
-      <Sg0WorkflowPanel
-        nextAction={nextAction}
-        workflow={workflow}
+      <StageWorkflowPanel
+        createPackageAction={createPackageAction}
+        packages={packages}
+        partnerId={partner.id}
+        requirements={requirements}
+        stage={partner.stage_gates}
       />
-
-      <Card id="sg0-checklist">
-        <CardHeader>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <CardTitle>SG0 Checklist</CardTitle>
-            <Button asChild variant="outline">
-              <Link href={`/partners/${partner.id}/checklist`}>Open full checklist</Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {requirements.length > 0 ? (
-            requirements.map((requirement) => (
-              <div
-                className="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
-                key={requirement.id}
-              >
-                <div>
-                  <h3 className="font-medium">{requirement.stage_requirements?.name}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {requirement.stage_requirements?.description ?? "No description."}
-                  </p>
-                </div>
-                <Badge variant={requirement.status === "complete" ? "default" : "secondary"}>
-                  {humanize(requirement.status)}
-                </Badge>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No checklist items are configured for the current stage.
-            </p>
-          )}
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -151,7 +125,9 @@ export default async function PartnerDetailPage({
             </div>
             <div className="rounded-lg border p-4">
               <dt>Region</dt>
-              <dd className="mt-1 text-sm text-muted-foreground">{partner.region ?? "Not set"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.region ?? "Not set"}
+              </dd>
             </div>
             <div className="rounded-lg border p-4">
               <dt>Headquarters country</dt>

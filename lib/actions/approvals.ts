@@ -7,6 +7,7 @@ import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createDraftPackageForStage } from "@/lib/workflows/stage-packages";
 
 export type ApprovalActionState = {
   error?: string;
@@ -366,6 +367,22 @@ async function advanceStageIfApplicable(input: {
 
   if (nextStageError) throw nextStageError;
 
+  const { data: partner, error: partnerError } = await input.admin
+    .from("partners")
+    .select("current_tier_id")
+    .eq("id", input.partnerId)
+    .single();
+
+  if (partnerError) throw partnerError;
+
+  const { data: partnerTypeAssignments, error: partnerTypesError } =
+    await input.admin
+      .from("partner_type_assignments")
+      .select("partner_type_id")
+      .eq("partner_id", input.partnerId);
+
+  if (partnerTypesError) throw partnerTypesError;
+
   await input.admin
     .from("partner_stage_history")
     .update({
@@ -411,6 +428,21 @@ async function advanceStageIfApplicable(input: {
       })),
       { onConflict: "partner_id,stage_requirement_id", ignoreDuplicates: true },
     );
+  }
+
+  const packageResult = await createDraftPackageForStage({
+    supabase: input.admin,
+    partnerId: input.partnerId,
+    stageGateId: nextStage.id as string,
+    currentTierId: partner.current_tier_id as string,
+    partnerTypeIds: (partnerTypeAssignments ?? []).map(
+      (assignment) => assignment.partner_type_id as string,
+    ),
+    actorUserId: input.actorUserId,
+  });
+
+  if (packageResult.error) {
+    throw new Error(packageResult.error);
   }
 
   await input.admin.from("audit_events").insert({

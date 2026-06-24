@@ -9,6 +9,7 @@ import { initializeStageGatePackageForPartner } from "@/lib/actions/packages";
 import { getRegisteredTierId, getSg0StageId } from "@/lib/data/partners";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { partnerFormSchema } from "@/lib/validation/partner";
+import { createDraftPackageForStage } from "@/lib/workflows/stage-packages";
 
 export type PartnerFormState = {
   error?: string;
@@ -116,6 +117,19 @@ export async function createPartnerAction(
     to_stage_id: sg0StageId,
     transition_status: "current",
   });
+
+  const packageResult = await createDraftPackageForStage({
+    supabase,
+    partnerId: partner.id as string,
+    stageGateId: sg0StageId,
+    currentTierId: parsed.data.currentTierId,
+    partnerTypeIds: parsed.data.partnerTypeIds,
+    actorUserId: currentUser.id,
+  });
+
+  if (packageResult.error) {
+    return { error: packageResult.error };
+  }
 
   await writeAuditEvent(supabase, {
     actorUserId: currentUser.id,
