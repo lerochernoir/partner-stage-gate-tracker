@@ -134,7 +134,9 @@ export default async function DecisionLogsPage({
         </table>
         {decisions.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            No decisions have been recorded.
+            {filters.partner || filters.stage || filters.decision
+              ? "No decisions match the current filters."
+              : "No decisions have been recorded."}
           </div>
         ) : null}
       </div>

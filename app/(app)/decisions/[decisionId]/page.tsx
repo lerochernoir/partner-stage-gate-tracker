@@ -42,7 +42,7 @@ export default async function DecisionDetailPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Outcome
-            <Badge variant="secondary">{humanize(decision.decision_outcome)}</Badge>
+            <Badge variant="secondary">{formatDecision(decision.decision_outcome)}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm text-muted-foreground">
@@ -62,4 +62,12 @@ export default async function DecisionDetailPage({
       </Card>
     </PageShell>
   );
+}
+
+function formatDecision(outcome: string) {
+  if (outcome === "rework_required") {
+    return "Rework Requested";
+  }
+
+  return humanize(outcome);
 }
