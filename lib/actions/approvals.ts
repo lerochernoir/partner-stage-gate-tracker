@@ -232,8 +232,7 @@ async function finalizeApproval(input: {
     .from("approval_steps")
     .update({ status: "cancelled" })
     .eq("approval_id", input.approvalId)
-    .eq("status", "pending")
-    .neq("decision", "approved");
+    .eq("status", "pending");
 
   await admin
     .from("approvals")

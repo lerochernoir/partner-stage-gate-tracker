@@ -87,7 +87,7 @@ export default async function MyApprovalsPage({
         </table>
         {approvals.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            You have no pending approvals.
+            {getEmptyState(tab)}
           </div>
         ) : null}
       </div>
@@ -115,4 +115,16 @@ function formatDecisionStatus(decision: string | null) {
   if (!decision) return "Pending";
   if (decision === "rework_required") return "Rework Requested";
   return humanize(decision);
+}
+
+function getEmptyState(tab: MyApprovalsTab) {
+  if (tab === "completed") {
+    return "You have no completed approvals.";
+  }
+
+  if (tab === "all") {
+    return "You have no assigned approvals.";
+  }
+
+  return "You have no pending approvals.";
 }
