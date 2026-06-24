@@ -1,5 +1,4 @@
 import type { AppUser } from "@/lib/auth/session";
-import { ROLE_CODES } from "@/lib/auth/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ApprovalStepRow = {
@@ -22,9 +21,11 @@ export type ApprovalRow = {
   stage_gate_package_id: string;
   approval_type: string;
   status: string;
+  requested_by: string | null;
   requested_at: string;
   completed_at: string | null;
   final_decision: string | null;
+  requested_by_user: { id: string; name: string; email: string } | null;
   partners: { id: string; name: string } | null;
   stage_gates: { id: string; code: string; name: string } | null;
   stage_gate_packages: { id: string; package_version: number; status: string } | null;
@@ -33,7 +34,11 @@ export type ApprovalRow = {
 
 type ApprovalBaseRow = Omit<
   ApprovalRow,
-  "partners" | "stage_gates" | "stage_gate_packages" | "approval_steps"
+  | "partners"
+  | "stage_gates"
+  | "stage_gate_packages"
+  | "approval_steps"
+  | "requested_by_user"
 >;
 
 type ApprovalStepJoinRow = ApprovalStepRow & {
@@ -47,6 +52,7 @@ const approvalSelect = `
   stage_gate_package_id,
   approval_type,
   status,
+  requested_by,
   requested_at,
   completed_at,
   final_decision
@@ -64,27 +70,42 @@ export async function getApprovals() {
   return hydrateApprovals(data ?? []);
 }
 
-export async function getMyApprovals(user: AppUser) {
+export type MyApprovalsTab = "pending" | "completed" | "all";
+
+export async function getMyApprovals(
+  user: AppUser,
+  tab: MyApprovalsTab = "pending",
+) {
   const approvals = await getApprovals();
+  const roleCodes = new Set(user.roles as string[]);
 
-  if (user.roles.includes(ROLE_CODES.systemAdmin)) {
-    return approvals.filter(
-      (approval) =>
-        ["submitted", "in_review"].includes(approval.status) &&
-        approval.approval_steps.some((step) => step.status === "pending"),
-    );
-  }
-
-  return approvals.filter((approval) =>
-    approval.approval_steps.some(
-      (step) =>
-        step.status === "pending" &&
-        (step.approver_user_id === user.id ||
+  return approvals
+    .filter((approval) =>
+      approval.approval_steps.some(
+        (step) =>
+          step.approver_user_id === user.id ||
           (step.approver_user_id === null &&
             step.roles?.code &&
-            (user.roles as string[]).includes(step.roles.code))),
-    ),
-  );
+            roleCodes.has(step.roles.code)),
+      ),
+    )
+    .filter((approval) => {
+      if (tab === "all") return true;
+      if (tab === "completed") {
+        return ["approved", "rework_required", "rejected"].includes(approval.status);
+      }
+      return (
+        ["submitted", "in_review"].includes(approval.status) &&
+        approval.approval_steps.some(
+          (step) =>
+            step.status === "pending" &&
+            (step.approver_user_id === user.id ||
+              (step.approver_user_id === null &&
+                step.roles?.code &&
+                roleCodes.has(step.roles.code))),
+        )
+      );
+    });
 }
 
 export async function getApprovalById(approvalId: string) {
@@ -109,8 +130,19 @@ async function hydrateApprovals(approvals: ApprovalBaseRow[]): Promise<ApprovalR
   const partnerIds = unique(approvals.map((approval) => approval.partner_id));
   const stageGateIds = unique(approvals.map((approval) => approval.stage_gate_id));
   const packageIds = unique(approvals.map((approval) => approval.stage_gate_package_id));
+  const requestedByIds = unique(
+    approvals
+      .map((approval) => approval.requested_by)
+      .filter((id): id is string => Boolean(id)),
+  );
 
-  const [stepsResult, partnersResult, stageGatesResult, packagesResult] = await Promise.all([
+  const [
+    stepsResult,
+    partnersResult,
+    stageGatesResult,
+    packagesResult,
+    usersResult,
+  ] = await Promise.all([
     supabase
       .from("approval_steps")
       .select(
@@ -132,13 +164,20 @@ async function hydrateApprovals(approvals: ApprovalBaseRow[]): Promise<ApprovalR
       .returns<ApprovalStepJoinRow[]>(),
     supabase.from("partners").select("id, name").in("id", partnerIds),
     supabase.from("stage_gates").select("id, code, name").in("id", stageGateIds),
-    supabase.from("stage_gate_packages").select("id, package_version, status").in("id", packageIds),
+    supabase
+      .from("stage_gate_packages")
+      .select("id, package_version, status")
+      .in("id", packageIds),
+    requestedByIds.length > 0
+      ? supabase.from("users").select("id, name, email").in("id", requestedByIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (stepsResult.error) throw stepsResult.error;
   if (partnersResult.error) throw partnersResult.error;
   if (stageGatesResult.error) throw stageGatesResult.error;
   if (packagesResult.error) throw packagesResult.error;
+  if (usersResult.error) throw usersResult.error;
 
   const stepsByApprovalId = new Map<string, ApprovalStepRow[]>();
   for (const step of stepsResult.data ?? []) {
@@ -147,9 +186,19 @@ async function hydrateApprovals(approvals: ApprovalBaseRow[]): Promise<ApprovalR
     stepsByApprovalId.set(step.approval_id, steps);
   }
 
-  const partnersById = new Map((partnersResult.data ?? []).map((partner) => [partner.id, partner]));
-  const stageGatesById = new Map((stageGatesResult.data ?? []).map((stageGate) => [stageGate.id, stageGate]));
-  const packagesById = new Map((packagesResult.data ?? []).map((stagePackage) => [stagePackage.id, stagePackage]));
+  const partnersById = new Map(
+    (partnersResult.data ?? []).map((partner) => [partner.id, partner]),
+  );
+  const stageGatesById = new Map(
+    (stageGatesResult.data ?? []).map((stageGate) => [stageGate.id, stageGate]),
+  );
+  const packagesById = new Map(
+    (packagesResult.data ?? []).map((stagePackage) => [
+      stagePackage.id,
+      stagePackage,
+    ]),
+  );
+  const usersById = new Map((usersResult.data ?? []).map((user) => [user.id, user]));
 
   return approvals.map((approval) =>
     normalizeApproval({
@@ -157,6 +206,9 @@ async function hydrateApprovals(approvals: ApprovalBaseRow[]): Promise<ApprovalR
       partners: partnersById.get(approval.partner_id) ?? null,
       stage_gates: stageGatesById.get(approval.stage_gate_id) ?? null,
       stage_gate_packages: packagesById.get(approval.stage_gate_package_id) ?? null,
+      requested_by_user: approval.requested_by
+        ? usersById.get(approval.requested_by) ?? null
+        : null,
       approval_steps: stepsByApprovalId.get(approval.id) ?? [],
     }),
   );
