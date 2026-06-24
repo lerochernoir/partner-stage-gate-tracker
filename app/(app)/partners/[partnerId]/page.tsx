@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { StageWorkflowPanel } from "@/components/partners/StageWorkflowPanel";
 import {
   PartnerStatusBadge,
   StageBadge,
@@ -8,9 +9,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createStageGatePackageAction } from "@/lib/actions/packages";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
+import { getPartnerCurrentRequirements } from "@/lib/data/lifecycle";
 import { getPartnerById } from "@/lib/data/partners";
+import { getPartnerPackages } from "@/lib/data/packages";
 import { formatDateTime } from "@/lib/format";
 
 export default async function PartnerDetailPage({
@@ -20,7 +24,11 @@ export default async function PartnerDetailPage({
 }) {
   const user = await requireUser();
   const { partnerId } = await params;
-  const partner = await getPartnerById(partnerId);
+  const [partner, requirements, packages] = await Promise.all([
+    getPartnerById(partnerId),
+    getPartnerCurrentRequirements(partnerId),
+    getPartnerPackages(partnerId),
+  ]);
 
   if (!partner) {
     notFound();
@@ -29,6 +37,10 @@ export default async function PartnerDetailPage({
   const canEdit =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
     partner.alliance_manager_id === user.id;
+  const createPackageAction = async () => {
+    "use server";
+    await createStageGatePackageAction(partner.id);
+  };
 
   return (
     <div className="grid gap-6">
@@ -83,6 +95,14 @@ export default async function PartnerDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      <StageWorkflowPanel
+        createPackageAction={createPackageAction}
+        packages={packages}
+        partnerId={partner.id}
+        requirements={requirements}
+        stage={partner.stage_gates}
+      />
 
       <Card>
         <CardHeader>

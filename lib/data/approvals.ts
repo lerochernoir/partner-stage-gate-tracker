@@ -42,7 +42,7 @@ const approvalSelect = `
   final_decision,
   partners(id, name),
   stage_gates(id, code, name),
-  stage_gate_packages(id, package_version, status),
+  stage_gate_packages!approvals_stage_gate_package_id_fkey(id, package_version, status),
   approval_steps(
     id,
     step_order,
