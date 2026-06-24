@@ -10,9 +10,11 @@ const initialState: PackageActionState = {};
 export function SubmitPackageForm({
   packageId,
   disabled = false,
+  label = "Submit for approval",
 }: {
   packageId: string;
   disabled?: boolean;
+  label?: string;
 }) {
   const [state, formAction, pending] = useActionState(submitPackageAction, initialState);
 
@@ -28,7 +30,7 @@ export function SubmitPackageForm({
         <p className="text-sm text-muted-foreground">{state.success}</p>
       ) : null}
       <Button disabled={pending || disabled} type="submit">
-        {pending ? "Submitting..." : "Submit for approval"}
+        {pending ? "Submitting..." : label}
       </Button>
     </form>
   );
