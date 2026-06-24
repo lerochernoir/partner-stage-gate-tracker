@@ -5,6 +5,7 @@ import { hasAnyRole, type AppUser } from "@/lib/auth/session";
 import { ROLE_CODES } from "@/lib/auth/roles";
 
 const baseNav = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/partners", label: "Partners" },
   { href: "/packages", label: "Packages" },
   { href: "/approvals/my", label: "My Approvals" },
