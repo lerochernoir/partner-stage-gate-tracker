@@ -7,6 +7,8 @@ This ERD covers the MVP database scope:
 - Partner management
 - SG0-SG2 lifecycle tracking
 - Stage Gate Packages
+- Stage Gate Package templates and field templates
+- Evidence requirements and submitted evidence
 - Approvals
 - Decision Logs
 - Dashboard source tables
@@ -38,6 +40,21 @@ erDiagram
     stage_gates ||--o{ stage_gate_packages : packages
     users ||--o{ stage_gate_packages : submits
     stage_gate_packages ||--o{ stage_gate_package_sections : contains
+    stage_gates ||--o{ stage_gate_package_section_templates : defines
+    partner_types ||--o{ stage_gate_package_section_templates : scopes
+    partner_tiers ||--o{ stage_gate_package_section_templates : scopes
+    stage_gate_package_section_templates ||--o{ stage_gate_package_field_templates : defines
+    stage_gates ||--o{ stage_gate_evidence_requirements : requires
+    stage_requirements ||--o{ stage_gate_evidence_requirements : maps_to
+    partner_types ||--o{ stage_gate_evidence_requirements : scopes
+    partner_tiers ||--o{ stage_gate_evidence_requirements : scopes
+    partners ||--o{ evidence : submits
+    stage_gates ||--o{ evidence : stage
+    stage_gate_packages ||--o{ evidence : package
+    stage_gate_evidence_requirements ||--o{ evidence : satisfies
+    evidence ||--o{ evidence_reviews : reviewed_by
+    stage_gate_packages ||--o{ stage_gate_package_evidence : includes
+    evidence ||--o{ stage_gate_package_evidence : included_in
 
     stage_gates ||--o{ approval_rules : configures
     partner_types ||--o{ approval_rules : scopes
@@ -120,6 +137,16 @@ erDiagram
         decision_type decision_type
         decision_outcome decision_outcome
     }
+
+    evidence {
+        uuid id PK
+        uuid partner_id FK
+        uuid stage_gate_id FK
+        uuid stage_gate_package_id FK
+        uuid evidence_requirement_id FK
+        evidence_type evidence_type
+        evidence_status status
+    }
 ```
 
 ## Migration execution order
@@ -130,6 +157,9 @@ erDiagram
 4. `20260624123300_004_packages_approvals_decisions.sql`
 5. `20260624123400_005_rls_policies.sql`
 6. `20260624123500_006_seed_mvp_reference_data.sql`
+7. `20260624131700_007_governance_templates_evidence_schema.sql`
+8. `20260624131800_008_governance_templates_evidence_rls.sql`
+9. `20260624131900_009_seed_governance_templates_and_rules.sql`
 
 ## Row Level Security strategy
 
@@ -146,6 +176,8 @@ The MVP uses Supabase Row Level Security on every application table.
   - Users assigned to approval steps for that partner
 - Partner mutation is limited to System Admins and assigned Alliance Managers.
 - Stage Gate Packages are editable only while Draft or Rework Required, and only by users who can modify the partner.
+- Package/evidence templates are readable by authenticated users and mutable only by System Admins.
+- Evidence is visible to users with partner access, mutable by partner owners/admins, and reviewable by authorized reviewer roles.
 - Approval steps can be decided only by the assigned approver or by a user holding the step's approver role when no specific approver is assigned.
 - Decision Logs and Stage History are append-only from the client perspective.
 - Audit events are insertable by authenticated users and visible to System Admins and Alliance Leadership.
