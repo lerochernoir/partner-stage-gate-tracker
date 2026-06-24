@@ -18,6 +18,12 @@ export type DecisionLogRow = {
   users: { id: string; name: string; email: string } | null;
 };
 
+export type DecisionLogFilters = {
+  partner?: string;
+  stage?: string;
+  decision?: string;
+};
+
 const decisionSelect = `
   id,
   partner_id,
@@ -36,16 +42,34 @@ const decisionSelect = `
   users(id, name, email)
 `;
 
-export async function getDecisionLogs() {
+export async function getDecisionLogs(filters: DecisionLogFilters = {}) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("decision_logs")
     .select(decisionSelect)
-    .order("decided_at", { ascending: false })
-    .returns<DecisionLogRow[]>();
+    .order("decided_at", { ascending: false });
+
+  if (filters.decision) {
+    query = query.eq("decision_outcome", filters.decision);
+  }
+
+  if (filters.stage) {
+    query = query.eq("stage_gates.code", filters.stage);
+  }
+
+  const { data, error } = await query.returns<DecisionLogRow[]>();
 
   if (error) throw error;
-  return data ?? [];
+  const decisions = data ?? [];
+
+  if (!filters.partner) {
+    return decisions;
+  }
+
+  const partnerFilter = filters.partner.toLowerCase();
+  return decisions.filter((decision) =>
+    decision.partners?.name.toLowerCase().includes(partnerFilter),
+  );
 }
 
 export async function getPartnerDecisionLogs(partnerId: string) {

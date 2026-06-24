@@ -31,6 +31,11 @@ export default async function DecisionDetailPage({
             <Link href={`/packages/${decision.stage_gate_package_id}`}>View package</Link>
           </Button>
         ) : null}
+        {decision.approval_id ? (
+          <Button asChild variant="outline">
+            <Link href={`/approvals/${decision.approval_id}`}>View approval</Link>
+          </Button>
+        ) : null}
       </div>
 
       <Card>
