@@ -8,7 +8,30 @@ import { formatDateTime, humanize } from "@/lib/format";
 
 export default async function MyApprovalsPage() {
   const user = await requireUser();
-  const approvals = await getMyApprovals(user);
+  let approvals: Awaited<ReturnType<typeof getMyApprovals>>;
+
+  try {
+    approvals = await getMyApprovals(user);
+  } catch (error) {
+    console.error("[route:/approvals/my] Failed to load my approvals page.", error);
+
+    return (
+      <PageShell description="Approval steps assigned to you." title="My Approvals">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-sm">
+          <h2 className="font-semibold text-destructive">
+            My Approvals could not load.
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            The exact server error has been written to the Vercel logs for route
+            <span className="font-mono"> /approvals/my</span>.
+          </p>
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
+            {error instanceof Error ? error.message : "Unknown server error"}
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell description="Approval steps assigned to you." title="My Approvals">

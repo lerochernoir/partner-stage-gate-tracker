@@ -9,7 +9,31 @@ import { formatDateTime, humanize } from "@/lib/format";
 
 export default async function UsersPage() {
   await requireAnyRole([ROLE_CODES.systemAdmin]);
-  const users = await getUsers();
+  let users: Awaited<ReturnType<typeof getUsers>>;
+
+  try {
+    users = await getUsers();
+  } catch (error) {
+    console.error("[route:/admin/users] Failed to load users page.", error);
+
+    return (
+      <PageShell
+        description="Manage internal access and Sprint 1 role assignments."
+        title="Users"
+      >
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-sm">
+          <h2 className="font-semibold text-destructive">Users could not load.</h2>
+          <p className="mt-2 text-muted-foreground">
+            The exact server error has been written to the Vercel logs for route
+            <span className="font-mono"> /admin/users</span>.
+          </p>
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
+            {error instanceof Error ? error.message : "Unknown server error"}
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
