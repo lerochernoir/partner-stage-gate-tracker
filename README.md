@@ -22,7 +22,7 @@ The service role key is used only in server-side admin user creation flows.
 
 ## Partner defaults
 
-New partners start at the `SG0` Identification stage with the `registered` tier. `Nexus` is the next tier after the partner advances beyond initial registration.
+New partners start at the `SG0` Identification stage with the `registered` tier. Existing `Nexus` tier records map to `Advanced`; existing `Synergy` and `Apex` tier records map to `Authorized`.
 
 ## Commands
 

@@ -74,7 +74,7 @@ export function Sg0WorkflowPanel({
           />
           <StatusItem
             label="Decision Status"
-            value={workflow.decision ? "Decision Complete" : "Not Started"}
+            value={workflow.decision ? statusLabels[workflow.decision.workflowStatus] : "Not Started"}
             status={workflow.decision?.workflowStatus ?? "not_started"}
           />
           <StatusItem

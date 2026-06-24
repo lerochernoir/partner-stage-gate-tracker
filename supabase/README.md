@@ -98,6 +98,7 @@ Run the migrations in timestamp order:
 7. `migrations/20260624131700_007_governance_templates_evidence_schema.sql`
 8. `migrations/20260624131800_008_governance_templates_evidence_rls.sql`
 9. `migrations/20260624131900_009_seed_governance_templates_and_rules.sql`
+10. `migrations/20260624190100_010_update_partner_tiers.sql`
 
 ---
 
@@ -114,6 +115,7 @@ Run the migrations in timestamp order:
 | `007_governance_templates_evidence_schema.sql` | Package templates, field templates, evidence requirements, evidence, evidence reviews, package-evidence mapping |
 | `008_governance_templates_evidence_rls.sql` | Supabase RLS helper functions and policies for governance/evidence tables |
 | `009_seed_governance_templates_and_rules.sql` | Conditional reviewer roles, conditional approval rules, package templates, field templates, evidence requirement seed data |
+| `010_update_partner_tiers.sql` | Partner tier model update from Registered/Nexus/Synergy/Apex to Registered/Advanced/Authorized |
 
 ---
 

@@ -911,9 +911,8 @@ Audit event store:
 | Code | Name | Rank |
 |---|---|---:|
 | `registered` | Registered | 1 |
-| `nexus` | Nexus | 2 |
-| `synergy` | Synergy | 3 |
-| `apex` | Apex | 4 |
+| `advanced` | Advanced | 2 |
+| `authorized` | Authorized | 3 |
 
 ### Stage Gates
 
@@ -968,15 +967,12 @@ Audit event store:
 
 | Stage | Scope | Sequence | Active | Role |
 |---|---|---:|---:|---|
-| SG0 | Synergy tier | 2 | Yes | Executive Sponsor |
-| SG0 | Apex tier | 2 | Yes | Executive Sponsor |
+| SG0 | Authorized tier | 2 | Yes | Executive Sponsor |
 | SG1 | OEM type | 2 | Yes | Executive Sponsor |
 | SG1 | Data Provider type | 2 | Yes | Executive Sponsor |
-| SG1 | Synergy tier | 2 | Yes | Executive Sponsor |
-| SG1 | Apex tier | 2 | Yes | Executive Sponsor |
+| SG1 | Authorized tier | 2 | Yes | Executive Sponsor |
 | SG2 | OEM type | 2 | Yes | Executive Sponsor |
-| SG2 | Synergy tier | 2 | Yes | Executive Sponsor |
-| SG2 | Apex tier | 2 | Yes | Executive Sponsor |
+| SG2 | Authorized tier | 2 | Yes | Executive Sponsor |
 | SG2 | ISV type | 2 | No | Product / Technical Reviewer |
 | SG2 | SI type | 2 | No | Delivery / Operations Reviewer |
 | SG2 | Marketplace type | 2 | No | Marketplace Operations Reviewer |
@@ -1023,7 +1019,7 @@ SG0:
 - Internal nomination/source note
 - Partner type justification
 - Partner website/profile source
-- Executive sponsor confirmation for Synergy/Apex
+- Executive sponsor confirmation for Authorized
 
 SG1:
 
@@ -1031,7 +1027,7 @@ SG1:
 - Market/segment rationale
 - Partner capability summary
 - Initial customer/account examples
-- Executive sponsor confirmation for OEM, Data Provider, Synergy, Apex
+- Executive sponsor confirmation for OEM, Data Provider, Authorized
 
 SG2:
 
@@ -1041,7 +1037,7 @@ SG2:
 - GTM assumptions
 - Finance review notes
 - GTM review notes
-- Executive sponsor confirmation for OEM, Synergy, Apex
+- Executive sponsor confirmation for OEM, Authorized
 - Data rights/compliance note for Data Provider
 
 ---

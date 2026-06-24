@@ -32,9 +32,8 @@ set
 insert into public.partner_tiers (code, name, description, rank)
 values
     ('registered', 'Registered', 'Entry-level partner with basic profile, eligibility, and minimum governance coverage.', 1),
-    ('nexus', 'Nexus', 'Validated partner with approved business case and active engagement motion.', 2),
-    ('synergy', 'Synergy', 'Strategic partner with validated technical/operational readiness and approved GTM motion.', 3),
-    ('apex', 'Apex', 'Executive-priority partner with scaled field motion and measurable portfolio impact.', 4)
+    ('advanced', 'Advanced', 'Validated partner with approved business case and active engagement motion.', 2),
+    ('authorized', 'Authorized', 'Authorized partner with validated readiness, approved GTM motion, and executive-priority coverage where applicable.', 3)
 on conflict (code) do update
 set
     name = excluded.name,
