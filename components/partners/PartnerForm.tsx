@@ -9,6 +9,7 @@ import type { PartnerFormState } from "@/lib/actions/partners";
 
 type ReferenceOption = {
   id: string;
+  code?: string;
   name: string;
   email?: string;
 };
@@ -61,6 +62,10 @@ export function PartnerForm({
     [partner?.partnerTypeIds],
   );
   const [selectedTypes, setSelectedTypes] = useState(defaultTypeIds);
+  const defaultTierId =
+    partner?.currentTierId ??
+    partnerTiers.find((tier) => tier.code === "registered")?.id ??
+    partnerTiers[0]?.id;
 
   function toggleType(partnerTypeId: string) {
     setSelectedTypes((previous) => {
@@ -170,7 +175,7 @@ export function PartnerForm({
           <Label htmlFor="currentTierId">Tier*</Label>
           <select
             className={selectClass}
-            defaultValue={partner?.currentTierId ?? partnerTiers[0]?.id}
+            defaultValue={defaultTierId}
             id="currentTierId"
             name="currentTierId"
             required

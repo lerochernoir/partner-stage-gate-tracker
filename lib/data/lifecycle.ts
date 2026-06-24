@@ -34,7 +34,21 @@ export async function getPartnerCurrentRequirements(partnerId: string) {
   const supabase = await createSupabaseServerClient();
   const { data: partner, error: partnerError } = await supabase
     .from("partners")
-    .select("current_stage_id")
+    .select(
+      `
+        id,
+        name,
+        legal_name,
+        website,
+        headquarters_country,
+        region,
+        industry_focus,
+        alliance_manager_id,
+        initial_rationale,
+        current_stage_id,
+        partner_type_assignments(partner_type_id)
+      `,
+    )
     .eq("id", partnerId)
     .maybeSingle();
 
@@ -67,13 +81,78 @@ export async function getPartnerCurrentRequirements(partnerId: string) {
     .returns<StageRequirementRow[]>();
 
   if (error) throw error;
-  return (data ?? [])
+  const requirements = data ?? [];
+  const updates = getAutoCompleteSg0Updates(partner, requirements);
+
+  if (updates.length > 0) {
+    await Promise.all(
+      updates.map((update) =>
+        supabase
+          .from("partner_stage_requirements")
+          .update({
+            status: "complete",
+            completed_by: partner.alliance_manager_id,
+            completed_at: new Date().toISOString(),
+            updated_by: partner.alliance_manager_id,
+          })
+          .eq("id", update.id),
+      ),
+    );
+  }
+
+  const completedIds = new Set(updates.map((update) => update.id));
+  return requirements
+    .map((row) =>
+      completedIds.has(row.id)
+        ? {
+            ...row,
+            status: "complete" as const,
+            completed_by: partner.alliance_manager_id,
+            completed_at: new Date().toISOString(),
+          }
+        : row,
+    )
     .filter((row) => row.stage_requirements)
     .sort(
       (a, b) =>
         (a.stage_requirements?.display_order ?? 0) -
         (b.stage_requirements?.display_order ?? 0),
     );
+}
+
+function getAutoCompleteSg0Updates(
+  partner: {
+    name: string;
+    legal_name: string | null;
+    website: string | null;
+    headquarters_country: string | null;
+    region: string | null;
+    industry_focus: string | null;
+    alliance_manager_id: string;
+    initial_rationale: string | null;
+    partner_type_assignments: { partner_type_id: string }[] | null;
+  },
+  requirements: StageRequirementRow[],
+) {
+  return requirements.filter((requirement) => {
+    if (requirement.status === "complete") return false;
+
+    switch (requirement.stage_requirements?.name) {
+      case "Partner profile completed":
+        return Boolean(
+          partner.name &&
+            (partner.legal_name || partner.website || partner.region || partner.headquarters_country || partner.industry_focus),
+        );
+      case "Partner type selected":
+        return Boolean(partner.partner_type_assignments?.length);
+      case "Alliance manager assigned":
+        return Boolean(partner.alliance_manager_id);
+      case "Initial rationale captured":
+        return Boolean(partner.initial_rationale?.trim());
+      default:
+        return false;
+    }
+  });
 }
 
 export async function getPartnerStageHistory(partnerId: string) {

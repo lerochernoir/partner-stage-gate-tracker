@@ -23,10 +23,10 @@ const workflowSteps = [
 ];
 
 const statusLabels: Record<WorkflowStatus, string> = {
-  not_started: "Draft",
-  draft: "Draft",
+  not_started: "Not Started",
+  draft: "In Progress",
   in_progress: "In Progress",
-  ready_for_review: "Ready for Review",
+  ready_for_review: "In Progress",
   pending_approval: "Pending Approval",
   approved: "Approved",
   rejected: "Rejected",
@@ -64,7 +64,7 @@ export function Sg0WorkflowPanel({
           />
           <StatusItem
             label="Package Status"
-            value={workflow.package ? statusLabels[workflow.package.workflowStatus] : "Not Created"}
+            value={workflow.package ? statusLabels[workflow.package.workflowStatus] : "Not Started"}
             status={workflow.package?.workflowStatus ?? "not_started"}
           />
           <StatusItem

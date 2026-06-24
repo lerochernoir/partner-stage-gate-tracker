@@ -18,6 +18,8 @@ export type PartnerListRow = {
   }[];
 };
 
+type PartnerUser = { id: string; name: string; email: string } | null;
+
 export type PartnerDetail = PartnerListRow & {
   website: string | null;
   headquarters_country: string | null;
@@ -72,7 +74,7 @@ export async function getPartners(searchParams?: {
   const { data, error } = await query.returns<PartnerListRow[]>();
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizePartnerUsers);
 }
 
 export async function getPartnerById(partnerId: string) {
@@ -110,7 +112,7 @@ export async function getPartnerById(partnerId: string) {
     .returns<PartnerDetail | null>();
 
   if (error) throw error;
-  return data;
+  return data ? normalizePartnerUsers(data) : null;
 }
 
 export async function getSg0StageId() {
@@ -135,4 +137,40 @@ export async function getRegisteredTierId() {
 
   if (error) throw error;
   return data.id as string;
+}
+
+function normalizePartnerUsers<T extends { alliance_manager: PartnerUser; executive_sponsor: PartnerUser }>(
+  partner: T,
+) {
+  return {
+    ...partner,
+    alliance_manager: normalizeUserDisplay(partner.alliance_manager),
+    executive_sponsor: normalizeUserDisplay(partner.executive_sponsor),
+  };
+}
+
+function normalizeUserDisplay(user: PartnerUser): PartnerUser {
+  if (!user) return null;
+
+  return {
+    ...user,
+    name: isPlaceholderName(user.name) ? nameFromEmail(user.email) : user.name,
+  };
+}
+
+function isPlaceholderName(name: string) {
+  return name.trim().toLowerCase() === "your name";
+}
+
+function nameFromEmail(email: string) {
+  if (!email || email.trim().toLowerCase() === "your.email@example.com") {
+    return "Unknown user";
+  }
+
+  return email
+    .split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
