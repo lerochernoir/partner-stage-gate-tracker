@@ -66,7 +66,11 @@ export default async function PackageDetailPage({
         sections={stagePackage.stage_gate_package_sections}
       >
         {editable ? (
-          <SubmitPackageForm disabled={!readyToSubmit} packageId={stagePackage.id} />
+          <SubmitPackageForm
+            disabled={!readyToSubmit}
+            label={`Submit ${stagePackage.stage_gates?.code ?? "Package"} for Approval`}
+            packageId={stagePackage.id}
+          />
         ) : null}
       </PackageEditor>
     </PageShell>
