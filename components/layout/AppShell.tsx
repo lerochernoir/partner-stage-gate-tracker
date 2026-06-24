@@ -6,6 +6,9 @@ import { ROLE_CODES } from "@/lib/auth/roles";
 
 const baseNav = [
   { href: "/partners", label: "Partners" },
+  { href: "/packages", label: "Packages" },
+  { href: "/approvals/my", label: "My Approvals" },
+  { href: "/decisions", label: "Decision Logs" },
   { href: "/admin/users", label: "Users", roles: [ROLE_CODES.systemAdmin] },
 ];
 

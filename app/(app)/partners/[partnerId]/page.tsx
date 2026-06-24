@@ -48,6 +48,15 @@ export default async function PartnerDetailPage({
                 </Button>
               ) : null}
               <Button asChild variant="outline">
+                <Link href={`/partners/${partner.id}/checklist`}>Checklist</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/partners/${partner.id}/packages`}>Packages</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/partners/${partner.id}/stage-history`}>Stage history</Link>
+              </Button>
+              <Button asChild variant="outline">
                 <Link href="/partners">Back to partners</Link>
               </Button>
             </div>
