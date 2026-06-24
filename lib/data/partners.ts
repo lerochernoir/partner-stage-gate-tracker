@@ -18,6 +18,30 @@ export type PartnerListRow = {
   }[];
 };
 
+export type PartnerWorkingListRow = {
+  id: string;
+  name: string;
+  website: string | null;
+  industry_focus: string | null;
+  created_at: string;
+  updated_at: string;
+  current_stage_id: string;
+  stage: { id: string; code: string; name: string } | null;
+  packageStatus: string;
+  approvalStatus: string;
+  nextStepDue: string;
+  owner: { id: string; name: string; email: string } | null;
+  sortRank: number;
+};
+
+export type PartnerWorkingListFilters = {
+  q?: string;
+  stage?: string;
+  packageStatus?: string;
+  approvalStatus?: string;
+  owner?: string;
+};
+
 type PartnerUser = { id: string; name: string; email: string } | null;
 
 export type PartnerDetail = PartnerListRow & {
@@ -75,6 +99,122 @@ export async function getPartners(searchParams?: {
 
   if (error) throw error;
   return (data ?? []).map(normalizePartnerUsers);
+}
+
+export async function getPartnerWorkingList(
+  filters: PartnerWorkingListFilters = {},
+) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("partners")
+    .select(
+      `
+        id,
+        name,
+        website,
+        industry_focus,
+        status,
+        created_at,
+        updated_at,
+        current_stage_id,
+        alliance_manager_id,
+        stage_gates!partners_current_stage_id_fkey(id, code, name),
+        alliance_manager:users!partners_alliance_manager_id_fkey(id, name, email)
+      `,
+    )
+    .neq("status", "rejected")
+    .returns<
+      Array<{
+        id: string;
+        name: string;
+        website: string | null;
+        industry_focus: string | null;
+        status: string;
+        created_at: string;
+        updated_at: string;
+        current_stage_id: string;
+        alliance_manager_id: string;
+        stage_gates:
+          | { id: string; code: string; name: string }
+          | { id: string; code: string; name: string }[]
+          | null;
+        alliance_manager:
+          | { id: string; name: string; email: string }
+          | { id: string; name: string; email: string }[]
+          | null;
+      }>
+    >();
+
+  if (error) throw error;
+
+  const partners = (data ?? []).map((partner) => {
+    const stage = Array.isArray(partner.stage_gates)
+      ? partner.stage_gates[0] ?? null
+      : partner.stage_gates;
+    const owner = normalizeUserDisplay(
+      Array.isArray(partner.alliance_manager)
+        ? partner.alliance_manager[0] ?? null
+        : partner.alliance_manager,
+    );
+
+    return {
+      id: partner.id,
+      name: partner.name,
+      website: partner.website,
+      industry_focus: partner.industry_focus,
+      created_at: partner.created_at,
+      updated_at: partner.updated_at,
+      current_stage_id: partner.current_stage_id,
+      stage,
+      owner,
+    };
+  });
+
+  const [packagesResult, approvalsResult] = await Promise.all([
+    supabase
+      .from("stage_gate_packages")
+      .select("id, partner_id, stage_gate_id, package_version, status")
+      .in("partner_id", partners.map((partner) => partner.id)),
+    supabase
+      .from("approvals")
+      .select("id, partner_id, stage_gate_package_id, status"),
+  ]);
+
+  if (packagesResult.error) throw packagesResult.error;
+  if (approvalsResult.error) throw approvalsResult.error;
+
+  const currentPackages = getCurrentPackagesByPartner(
+    partners,
+    packagesResult.data ?? [],
+  );
+  const approvalsByPackageId = new Map(
+    (approvalsResult.data ?? []).map((approval) => [
+      approval.stage_gate_package_id,
+      approval,
+    ]),
+  );
+  const rows = partners.map((partner) => {
+    const stagePackage = currentPackages.get(partner.id) ?? null;
+    const approval = stagePackage
+      ? approvalsByPackageId.get(stagePackage.id) ?? null
+      : null;
+    const packageStatus = stagePackage?.status ?? "not_created";
+    const approvalStatus = approval?.status ?? "not_started";
+    const pendingApproval = ["submitted", "in_review"].includes(approvalStatus);
+    const inProgressPackage = ["in_progress", "ready_for_review", "rework_required"].includes(
+      packageStatus,
+    );
+
+    return {
+      ...partner,
+      packageStatus,
+      approvalStatus,
+      nextStepDue: getNextStepDue(packageStatus, approvalStatus),
+      sortRank: pendingApproval ? 0 : inProgressPackage ? 1 : 2,
+    };
+  });
+
+  return rows.filter((row) => matchesWorkingListFilters(row, filters)).sort(sortWorkingList);
 }
 
 export async function getPartnerById(partnerId: string) {
@@ -173,4 +313,84 @@ function nameFromEmail(email: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function getCurrentPackagesByPartner(
+  partners: Array<{ id: string; current_stage_id: string }>,
+  packages: Array<{
+    id: string;
+    partner_id: string;
+    stage_gate_id: string;
+    package_version: number;
+    status: string;
+  }>,
+) {
+  const partnerStage = new Map(
+    partners.map((partner) => [partner.id, partner.current_stage_id]),
+  );
+  const map = new Map<string, (typeof packages)[number]>();
+
+  for (const stagePackage of packages) {
+    if (partnerStage.get(stagePackage.partner_id) !== stagePackage.stage_gate_id) {
+      continue;
+    }
+
+    const existing = map.get(stagePackage.partner_id);
+    if (!existing || stagePackage.package_version > existing.package_version) {
+      map.set(stagePackage.partner_id, stagePackage);
+    }
+  }
+
+  return map;
+}
+
+function getNextStepDue(packageStatus: string, approvalStatus: string) {
+  if (["submitted", "in_review"].includes(approvalStatus)) {
+    return "Now: review approval";
+  }
+
+  if (packageStatus === "not_created") {
+    return "Now: create package";
+  }
+
+  if (["draft", "in_progress", "rework_required"].includes(packageStatus)) {
+    return "Now: complete package";
+  }
+
+  if (packageStatus === "ready_for_review") {
+    return "Now: submit package";
+  }
+
+  return "Not scheduled";
+}
+
+function matchesWorkingListFilters(
+  row: Omit<PartnerWorkingListRow, "sortRank"> & { sortRank: number },
+  filters: PartnerWorkingListFilters,
+) {
+  const search = filters.q?.trim().toLowerCase();
+  const matchesSearch =
+    !search ||
+    row.name.toLowerCase().includes(search) ||
+    row.website?.toLowerCase().includes(search) ||
+    row.industry_focus?.toLowerCase().includes(search);
+  const matchesStage = !filters.stage || row.stage?.code === filters.stage;
+  const matchesPackage =
+    !filters.packageStatus || row.packageStatus === filters.packageStatus;
+  const matchesApproval =
+    !filters.approvalStatus || row.approvalStatus === filters.approvalStatus;
+  const matchesOwner = !filters.owner || row.owner?.id === filters.owner;
+
+  return (
+    matchesSearch &&
+    matchesStage &&
+    matchesPackage &&
+    matchesApproval &&
+    matchesOwner
+  );
+}
+
+function sortWorkingList(a: PartnerWorkingListRow, b: PartnerWorkingListRow) {
+  if (a.sortRank !== b.sortRank) return a.sortRank - b.sortRank;
+  return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
 }
