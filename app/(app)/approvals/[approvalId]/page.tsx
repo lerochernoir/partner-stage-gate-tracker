@@ -5,6 +5,7 @@ import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROLE_CODES } from "@/lib/auth/roles";
 import { requireUser } from "@/lib/auth/session";
 import { getApprovalById } from "@/lib/data/approvals";
 import { formatDateTime, humanize } from "@/lib/format";
@@ -23,7 +24,8 @@ export default async function ApprovalDetailPage({
   const myStep = approval.approval_steps.find(
     (step) =>
       step.status === "pending" &&
-      (step.approver_user_id === user.id ||
+      (user.roles.includes(ROLE_CODES.systemAdmin) ||
+        step.approver_user_id === user.id ||
         (step.approver_user_id === null &&
           step.roles?.code &&
           (user.roles as string[]).includes(step.roles.code))),

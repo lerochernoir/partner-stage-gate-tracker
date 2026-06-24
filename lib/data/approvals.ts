@@ -1,4 +1,5 @@
 import type { AppUser } from "@/lib/auth/session";
+import { ROLE_CODES } from "@/lib/auth/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ApprovalStepRow = {
@@ -65,6 +66,14 @@ export async function getApprovals() {
 
 export async function getMyApprovals(user: AppUser) {
   const approvals = await getApprovals();
+
+  if (user.roles.includes(ROLE_CODES.systemAdmin)) {
+    return approvals.filter(
+      (approval) =>
+        ["submitted", "in_review"].includes(approval.status) &&
+        approval.approval_steps.some((step) => step.status === "pending"),
+    );
+  }
 
   return approvals.filter((approval) =>
     approval.approval_steps.some(

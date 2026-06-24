@@ -25,6 +25,35 @@ const submitPackageSchema = z.object({
 });
 
 export async function createStageGatePackageAction(partnerId: string) {
+  const result = await createStageGatePackage(partnerId);
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  redirect(`/packages/${result.packageId}`);
+}
+
+export async function createStageGatePackageFromWorkflowAction(formData: FormData) {
+  const partnerId = String(formData.get("partnerId") ?? "");
+  const result = await createStageGatePackage(partnerId);
+
+  if (result.error) {
+    redirect(`/partners/${partnerId}/packages`);
+  }
+
+  redirect(`/packages/${result.packageId}`);
+}
+
+export async function initializeStageGatePackageForPartner(partnerId: string) {
+  const result = await createStageGatePackage(partnerId, { skipPermissionCheck: true });
+  return result.error;
+}
+
+async function createStageGatePackage(
+  partnerId: string,
+  options: { skipPermissionCheck?: boolean } = {},
+) {
   const currentUser = await requireUser();
   const partner = await getPartnerById(partnerId);
 
@@ -33,6 +62,7 @@ export async function createStageGatePackageAction(partnerId: string) {
   }
 
   if (
+    !options.skipPermissionCheck &&
     !hasAnyRole(currentUser, [ROLE_CODES.systemAdmin]) &&
     partner.alliance_manager_id !== currentUser.id
   ) {
@@ -54,7 +84,7 @@ export async function createStageGatePackageAction(partnerId: string) {
     .maybeSingle();
 
   if (existingActive) {
-    redirect(`/packages/${existingActive.id}`);
+    return { packageId: existingActive.id as string };
   }
 
   const { data: versions, error: versionsError } = await supabase
@@ -159,7 +189,8 @@ export async function createStageGatePackageAction(partnerId: string) {
   });
 
   revalidatePath(`/partners/${partner.id}/packages`);
-  redirect(`/packages/${stagePackage.id}`);
+  revalidatePath(`/partners/${partner.id}`);
+  return { packageId: stagePackage.id as string };
 }
 
 export async function updatePackageSectionAction(
@@ -228,7 +259,6 @@ export async function submitPackageAction(
   _previousState: PackageActionState,
   formData: FormData,
 ): Promise<PackageActionState> {
-  const currentUser = await requireUser();
   const parsed = submitPackageSchema.safeParse({
     packageId: formData.get("packageId"),
   });
@@ -237,6 +267,31 @@ export async function submitPackageAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid package." };
   }
 
+  const result = await submitStageGatePackage(parsed.data.packageId);
+  if (result.error) return { error: result.error };
+
+  redirect(`/approvals/${result.approvalId}`);
+}
+
+export async function submitPackageFromWorkflowAction(formData: FormData) {
+  const parsed = submitPackageSchema.safeParse({
+    packageId: formData.get("packageId"),
+  });
+
+  if (!parsed.success) {
+    redirect("/packages");
+  }
+
+  const result = await submitStageGatePackage(parsed.data.packageId);
+  if (result.error) {
+    redirect(`/packages/${parsed.data.packageId}`);
+  }
+
+  redirect(`/approvals/${result.approvalId}`);
+}
+
+async function submitStageGatePackage(packageId: string) {
+  const currentUser = await requireUser();
   const supabase = await createSupabaseServerClient();
   const { data: rawPackage, error: packageError } = await supabase
     .from("stage_gate_packages")
@@ -251,7 +306,7 @@ export async function submitPackageAction(
         stage_gate_package_sections(id, content, status)
       `,
     )
-    .eq("id", parsed.data.packageId)
+    .eq("id", packageId)
     .maybeSingle();
 
   if (packageError) return { error: packageError.message };
@@ -311,7 +366,8 @@ export async function submitPackageAction(
 
   revalidatePath(`/packages/${pkg.id}`);
   revalidatePath("/approvals/my");
-  return { success: "Package submitted for approval." };
+  revalidatePath(`/approvals/${approval.approvalId}`);
+  return { approvalId: approval.approvalId };
 }
 
 async function validateStageReadiness(

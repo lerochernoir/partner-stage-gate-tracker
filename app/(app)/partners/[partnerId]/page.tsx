@@ -8,9 +8,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sg0WorkflowPanel } from "@/components/workflow/Sg0WorkflowPanel";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { getPartnerById } from "@/lib/data/partners";
+import { getSg0NextAction, getSg0WorkflowState } from "@/lib/data/sg0-workflow";
 import { formatDateTime } from "@/lib/format";
 
 export default async function PartnerDetailPage({
@@ -26,6 +28,8 @@ export default async function PartnerDetailPage({
     notFound();
   }
 
+  const workflow = await getSg0WorkflowState(partner);
+  const nextAction = getSg0NextAction(partner.id, workflow, user);
   const canEdit =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
     partner.alliance_manager_id === user.id;
@@ -83,6 +87,11 @@ export default async function PartnerDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      <Sg0WorkflowPanel
+        nextAction={nextAction}
+        workflow={workflow}
+      />
 
       <Card>
         <CardHeader>

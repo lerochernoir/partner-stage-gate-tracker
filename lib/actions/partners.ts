@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { writeAuditEvent } from "@/lib/audit";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
+import { initializeStageGatePackageForPartner } from "@/lib/actions/packages";
 import { getRegisteredTierId, getSg0StageId } from "@/lib/data/partners";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { partnerFormSchema } from "@/lib/validation/partner";
@@ -102,6 +103,12 @@ export async function createPartnerAction(
 
   if (initError) {
     return { error: initError };
+  }
+
+  const packageInitError = await initializeStageGatePackageForPartner(partner.id as string);
+
+  if (packageInitError) {
+    return { error: packageInitError };
   }
 
   await supabase.from("partner_stage_history").insert({
