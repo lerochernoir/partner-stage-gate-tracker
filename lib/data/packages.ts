@@ -9,8 +9,6 @@ export type PackageListRow = {
   stage_gate_id: string;
   partners: { id: string; name: string } | null;
   stage_gates: { id: string; code: string; name: string } | null;
-  approvals: { id: string; status: string }[] | null;
-  decision_logs: { id: string; decision_outcome: string }[] | null;
 };
 
 type PackageListBaseRow = Omit<
@@ -110,8 +108,6 @@ async function hydratePackageList(packages: PackageListBaseRow[]): Promise<Packa
     ...stagePackage,
     partners: partnersById.get(stagePackage.partner_id) ?? null,
     stage_gates: stageGatesById.get(stagePackage.stage_gate_id) ?? null,
-    approvals: null,
-    decision_logs: null,
   }));
 }
 
