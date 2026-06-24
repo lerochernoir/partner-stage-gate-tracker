@@ -76,7 +76,9 @@ export function StageWorkflowPanel({
           </Button>
           {currentPackage ? (
             <Button asChild>
-              <Link href={`/packages/${currentPackage.id}`}>Open current package</Link>
+              <Link href={`/packages/${currentPackage.id}`}>
+                Open {stage?.code ?? "current"} Package
+              </Link>
             </Button>
           ) : readiness.ready ? (
             <form action={createPackageAction}>
@@ -120,7 +122,11 @@ function getNextAction(input: {
     return `Create the ${input.stageCode ?? "current-stage"} package.`;
   }
 
-  if (["draft", "rework_required"].includes(input.currentPackageStatus)) {
+  if (
+    ["draft", "in_progress", "ready_for_review", "rework_required"].includes(
+      input.currentPackageStatus,
+    )
+  ) {
     return "Complete package sections and submit for approval.";
   }
 

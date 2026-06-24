@@ -120,6 +120,47 @@ export async function getPartnerCurrentRequirements(partnerId: string) {
     );
 }
 
+export async function getPartnerRequirementsForStage(
+  partnerId: string,
+  stageGateId: string,
+) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("partner_stage_requirements")
+    .select(
+      `
+        id,
+        status,
+        notes,
+        completed_at,
+        owner:users!partner_stage_requirements_owner_id_fkey(id, name, email),
+        completed_by_user:users!partner_stage_requirements_completed_by_fkey(id, name, email),
+        stage_requirements(
+          id,
+          name,
+          description,
+          is_mandatory,
+          display_order,
+          requirement_type,
+          stage_gates(code, name)
+        )
+      `,
+    )
+    .eq("partner_id", partnerId)
+    .eq("stage_requirements.stage_gate_id", stageGateId)
+    .returns<StageRequirementRow[]>();
+
+  if (error) throw error;
+
+  return (data ?? [])
+    .filter((row) => row.stage_requirements)
+    .sort(
+      (a, b) =>
+        (a.stage_requirements?.display_order ?? 0) -
+        (b.stage_requirements?.display_order ?? 0),
+    );
+}
+
 function getAutoCompleteSg0Updates(
   partner: {
     name: string;

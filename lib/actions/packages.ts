@@ -22,6 +22,12 @@ const sectionUpdateSchema = z.object({
   content: z.string().trim(),
 });
 
+const sectionAutosaveSchema = z.object({
+  packageId: z.string().uuid(),
+  sectionId: z.string().uuid(),
+  content: z.string(),
+});
+
 const submitPackageSchema = z.object({
   packageId: z.string().uuid(),
 });
@@ -247,7 +253,7 @@ export async function updatePackageSectionAction(
   if (packageError) return { error: packageError.message };
   const pkg = normalizePackageSubmissionJoin(rawPackage);
   if (!pkg) return { error: "Package not found." };
-  if (!["draft", "rework_required"].includes(pkg.status as string)) {
+  if (!isEditablePackageStatus(pkg.status)) {
     return { error: "Only draft or rework packages can be edited." };
   }
 
@@ -280,8 +286,75 @@ export async function updatePackageSectionAction(
     newValue: { status: parsed.data.content ? "complete" : "draft" },
   });
 
+  const statusResult = await recalculatePackageEditStatus(
+    supabase,
+    parsed.data.packageId,
+  );
+  if (statusResult.error) {
+    return { error: statusResult.error };
+  }
+
   revalidatePath(`/packages/${parsed.data.packageId}`);
   return { success: "Section saved." };
+}
+
+export async function autosavePackageSectionAction(input: {
+  packageId: string;
+  sectionId: string;
+  content: string;
+}) {
+  const currentUser = await requireUser();
+  const parsed = sectionAutosaveSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid package section.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: rawPackage, error: packageError } = await supabase
+    .from("stage_gate_packages")
+    .select("id, status")
+    .eq("id", parsed.data.packageId)
+    .maybeSingle();
+
+  if (packageError) return { error: packageError.message };
+  const pkg = normalizePackageSubmissionJoin(rawPackage);
+  if (!pkg) return { error: "Package not found." };
+  if (!isEditablePackageStatus(pkg.status)) {
+    return { error: "This package is no longer editable." };
+  }
+
+  const sectionStatus = parsed.data.content.trim() ? "complete" : "draft";
+  const { error } = await supabase
+    .from("stage_gate_package_sections")
+    .update({
+      content: parsed.data.content,
+      status: sectionStatus,
+      updated_by: currentUser.id,
+    })
+    .eq("id", parsed.data.sectionId)
+    .eq("stage_gate_package_id", parsed.data.packageId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const statusResult = await recalculatePackageEditStatus(
+    supabase,
+    parsed.data.packageId,
+  );
+  if (statusResult.error) {
+    return { error: statusResult.error };
+  }
+
+  revalidatePath(`/packages/${parsed.data.packageId}`);
+  return {
+    success: "Autosaved.",
+    sectionStatus,
+    packageStatus: statusResult.status,
+  };
 }
 
 export async function submitPackageAction(
@@ -341,8 +414,8 @@ async function submitStageGatePackage(packageId: string) {
   if (packageError) return { error: packageError.message };
   const pkg = normalizePackageSubmissionJoin(rawPackage);
   if (!pkg) return { error: "Package not found." };
-  if (!["draft", "rework_required"].includes(pkg.status as string)) {
-    return { error: "Only draft or rework packages can be submitted." };
+  if (!isEditablePackageStatus(pkg.status)) {
+    return { error: "Only editable packages can be submitted." };
   }
   if (pkg.partners?.status === "rejected" || pkg.partners?.status === "on_hold") {
     return { error: "Rejected or on-hold partners cannot submit packages." };
@@ -376,7 +449,7 @@ async function submitStageGatePackage(packageId: string) {
   await supabase
     .from("stage_gate_packages")
     .update({
-      status: "in_review",
+      status: "submitted",
       submitted_by: currentUser.id,
       submitted_at: new Date().toISOString(),
       review_started_at: new Date().toISOString(),
@@ -397,6 +470,65 @@ async function submitStageGatePackage(packageId: string) {
   revalidatePath("/approvals/my");
   revalidatePath(`/approvals/${approval.approvalId}`);
   return { approvalId: approval.approvalId };
+}
+
+function isEditablePackageStatus(status: string) {
+  return ["draft", "in_progress", "ready_for_review", "rework_required"].includes(
+    status,
+  );
+}
+
+async function recalculatePackageEditStatus(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  packageId: string,
+) {
+  const { data: rawPackage, error } = await supabase
+    .from("stage_gate_packages")
+    .select(
+      `
+        id,
+        status,
+        partner_id,
+        stage_gate_id,
+        stage_gate_package_sections(id, content, status)
+      `,
+    )
+    .eq("id", packageId)
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+  const pkg = normalizePackageSubmissionJoin(rawPackage);
+  if (!pkg) return { error: "Package not found." };
+  if (!isEditablePackageStatus(pkg.status)) {
+    return { status: pkg.status };
+  }
+
+  const sections = pkg.stage_gate_package_sections ?? [];
+  const hasAnyContent = sections.some((section) => section.content?.trim());
+  const sectionsComplete =
+    sections.length > 0 && sections.every((section) => section.content?.trim());
+  const readinessError = await validateStageReadiness(
+    pkg.partner_id,
+    pkg.stage_gate_id,
+    sections,
+  );
+  const nextStatus =
+    sectionsComplete && !readinessError
+      ? "ready_for_review"
+      : hasAnyContent || pkg.status === "rework_required"
+        ? "in_progress"
+        : "draft";
+
+  if (nextStatus !== pkg.status) {
+    const { error: updateError } = await supabase
+      .from("stage_gate_packages")
+      .update({ status: nextStatus })
+      .eq("id", packageId);
+
+    if (updateError) return { error: updateError.message };
+  }
+
+  return { status: nextStatus };
 }
 
 async function validateStageReadiness(
