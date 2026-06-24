@@ -11,10 +11,7 @@ export type PackageListRow = {
   stage_gates: { id: string; code: string; name: string } | null;
 };
 
-type PackageListBaseRow = Omit<
-  PackageListRow,
-  "partners" | "stage_gates" | "approvals" | "decision_logs"
->;
+type PackageListBaseRow = Omit<PackageListRow, "partners" | "stage_gates">;
 
 export type PackageSectionRow = {
   id: string;
