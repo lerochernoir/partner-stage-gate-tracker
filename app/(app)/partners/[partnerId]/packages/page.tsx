@@ -32,7 +32,7 @@ export default async function PartnerPackagesPage({
           <Link href={`/partners/${partner.id}`}>Back to partner</Link>
         </Button>
         <form action={createAction}>
-          <Button type="submit">Create package</Button>
+          <Button type="submit">Create {partner.stage_gates?.code} package</Button>
         </form>
       </div>
 
@@ -42,6 +42,7 @@ export default async function PartnerPackagesPage({
             <tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-left font-medium">Version</th>
               <th className="px-4 py-3 text-left font-medium">Stage</th>
+              <th className="px-4 py-3 text-left font-medium">Current</th>
               <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-left font-medium">Submitted</th>
               <th className="px-4 py-3 text-left font-medium">Action</th>
@@ -52,6 +53,13 @@ export default async function PartnerPackagesPage({
               <tr className="border-b last:border-0" key={stagePackage.id}>
                 <td className="px-4 py-3">v{stagePackage.package_version}</td>
                 <td className="px-4 py-3">{stagePackage.stage_gates?.code}</td>
+                <td className="px-4 py-3">
+                  {stagePackage.stage_gate_id === partner.current_stage_id ? (
+                    <Badge>Current stage</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Prior stage</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <Badge variant="secondary">{humanize(stagePackage.status)}</Badge>
                 </td>

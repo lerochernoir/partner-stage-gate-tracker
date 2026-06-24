@@ -9,9 +9,14 @@ export type PackageListRow = {
   stage_gate_id: string;
   partners: { id: string; name: string } | null;
   stage_gates: { id: string; code: string; name: string } | null;
+  approvals: { id: string; status: string }[];
+  decision_logs: { id: string; decision_outcome: string }[];
 };
 
-type PackageListBaseRow = Omit<PackageListRow, "partners" | "stage_gates">;
+type PackageListBaseRow = Omit<
+  PackageListRow,
+  "partners" | "stage_gates" | "approvals" | "decision_logs"
+>;
 
 export type PackageSectionRow = {
   id: string;
@@ -89,27 +94,60 @@ async function hydratePackageList(packages: PackageListBaseRow[]): Promise<Packa
   const supabase = await createSupabaseServerClient();
   const partnerIds = unique(packages.map((stagePackage) => stagePackage.partner_id));
   const stageGateIds = unique(packages.map((stagePackage) => stagePackage.stage_gate_id));
+  const packageIds = unique(packages.map((stagePackage) => stagePackage.id));
 
-  const [partnersResult, stageGatesResult] = await Promise.all([
+  const [partnersResult, stageGatesResult, approvalsResult, decisionsResult] =
+    await Promise.all([
     supabase.from("partners").select("id, name").in("id", partnerIds),
     supabase.from("stage_gates").select("id, code, name").in("id", stageGateIds),
+    supabase
+      .from("approvals")
+      .select("id, status, stage_gate_package_id")
+      .in("stage_gate_package_id", packageIds),
+    supabase
+      .from("decision_logs")
+      .select("id, decision_outcome, stage_gate_package_id")
+      .in("stage_gate_package_id", packageIds),
   ]);
 
   if (partnersResult.error) throw partnersResult.error;
   if (stageGatesResult.error) throw stageGatesResult.error;
+  if (approvalsResult.error) throw approvalsResult.error;
+  if (decisionsResult.error) throw decisionsResult.error;
 
   const partnersById = new Map((partnersResult.data ?? []).map((partner) => [partner.id, partner]));
   const stageGatesById = new Map((stageGatesResult.data ?? []).map((stageGate) => [stageGate.id, stageGate]));
+  const approvalsByPackageId = groupBy(
+    approvalsResult.data ?? [],
+    (approval) => approval.stage_gate_package_id as string,
+  );
+  const decisionsByPackageId = groupBy(
+    decisionsResult.data ?? [],
+    (decision) => decision.stage_gate_package_id as string,
+  );
 
   return packages.map((stagePackage) => ({
     ...stagePackage,
     partners: partnersById.get(stagePackage.partner_id) ?? null,
     stage_gates: stageGatesById.get(stagePackage.stage_gate_id) ?? null,
+    approvals: approvalsByPackageId.get(stagePackage.id) ?? [],
+    decision_logs: decisionsByPackageId.get(stagePackage.id) ?? [],
   }));
 }
 
 function unique(values: string[]) {
   return Array.from(new Set(values));
+}
+
+function groupBy<T>(items: T[], getKey: (item: T) => string) {
+  const map = new Map<string, T[]>();
+
+  for (const item of items) {
+    const key = getKey(item);
+    map.set(key, [...(map.get(key) ?? []), item]);
+  }
+
+  return map;
 }
 
 export async function getPackageById(packageId: string) {
