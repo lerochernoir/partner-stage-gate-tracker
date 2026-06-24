@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { unstable_rethrow } from "next/navigation";
 import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,32 +6,7 @@ import { getPackages } from "@/lib/data/packages";
 import { formatDateTime, humanize } from "@/lib/format";
 
 export default async function PackagesPage() {
-  let packages: Awaited<ReturnType<typeof getPackages>>;
-
-  try {
-    packages = await getPackages();
-  } catch (error) {
-    unstable_rethrow(error);
-    console.error("[route:/packages] Failed to load packages page.", error);
-
-    return (
-      <PageShell
-        description="Review Stage Gate Packages across accessible partners."
-        title="Stage Gate Packages"
-      >
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-sm">
-          <h2 className="font-semibold text-destructive">Packages could not load.</h2>
-          <p className="mt-2 text-muted-foreground">
-            The exact server error has been written to the Vercel logs for route
-            <span className="font-mono"> /packages</span>.
-          </p>
-          <p className="mt-4 font-mono text-xs text-muted-foreground">
-            {error instanceof Error ? error.message : "Unknown server error"}
-          </p>
-        </div>
-      </PageShell>
-    );
-  }
+  const packages = await getPackages();
 
   return (
     <PageShell

@@ -62,10 +62,10 @@ export async function submitApprovalDecisionAction(
           is_required,
           approver_user_id,
           approver_role_id,
-          roles(code, name)
+          roles!approval_steps_approver_role_id_fkey(code, name)
         ),
-        stage_gates(code, sequence),
-        stage_gate_packages(id, package_version)
+        stage_gates!approvals_stage_gate_id_fkey(code, sequence),
+        stage_gate_packages!approvals_stage_gate_package_id_fkey(id, package_version)
       `,
     )
     .eq("id", parsed.data.approvalId)
@@ -203,8 +203,8 @@ async function finalizeApproval(input: {
         partner_id,
         stage_gate_id,
         stage_gate_package_id,
-        stage_gates(code, name, sequence),
-        stage_gate_packages(package_version)
+        stage_gates!approvals_stage_gate_id_fkey(code, name, sequence),
+        stage_gate_packages!approvals_stage_gate_package_id_fkey(package_version)
       `,
     )
     .eq("id", input.approvalId)
