@@ -93,6 +93,13 @@ export function Sg0WorkflowPanel({
           />
         </div>
 
+        {!workflow.package ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            No SG0 package exists yet. New partners auto-create this package;
+            partners created before Sprint 3 can create it after the SG0 checklist is complete.
+          </div>
+        ) : null}
+
         <ol className="grid gap-2">
           {workflowSteps.map((step, index) => {
             const complete = index < completedSteps;

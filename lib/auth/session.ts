@@ -48,6 +48,8 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
   return {
     ...appUser,
+    email: getDisplayEmail(appUser.email, user.email),
+    name: getDisplayName(appUser.name, user.user_metadata, user.email),
     roles: (roleRows ?? [])
       .map((row) => row.roles?.code)
       .filter((code): code is RoleCode => Boolean(code)),
@@ -76,4 +78,53 @@ export async function requireAnyRole(allowedRoles: RoleCode[]) {
 
 export function hasAnyRole(user: AppUser, allowedRoles: RoleCode[]) {
   return allowedRoles.some((role) => user.roles.includes(role));
+}
+
+function getDisplayEmail(appEmail: string, authEmail?: string) {
+  if (isPlaceholderEmail(appEmail) && authEmail) {
+    return authEmail;
+  }
+
+  return authEmail || appEmail;
+}
+
+function getDisplayName(
+  appName: string,
+  metadata: Record<string, unknown>,
+  authEmail?: string,
+) {
+  const metadataName =
+    stringFromMetadata(metadata, "full_name") ||
+    stringFromMetadata(metadata, "name") ||
+    stringFromMetadata(metadata, "display_name");
+
+  if (isPlaceholderName(appName)) {
+    return metadataName || nameFromEmail(authEmail) || appName;
+  }
+
+  return appName;
+}
+
+function stringFromMetadata(metadata: Record<string, unknown>, key: string) {
+  const value = metadata[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function isPlaceholderName(name: string) {
+  return name.trim().toLowerCase() === "your name";
+}
+
+function isPlaceholderEmail(email: string) {
+  return email.trim().toLowerCase() === "your.email@example.com";
+}
+
+function nameFromEmail(email?: string) {
+  if (!email) return null;
+
+  return email
+    .split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

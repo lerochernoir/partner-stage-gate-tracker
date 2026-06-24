@@ -5,15 +5,17 @@ import {
   StageBadge,
   TierBadge,
 } from "@/components/shared/status-badges";
+import { InitialRationalePreview } from "@/components/partners/InitialRationalePreview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sg0WorkflowPanel } from "@/components/workflow/Sg0WorkflowPanel";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
+import { getPartnerCurrentRequirements } from "@/lib/data/lifecycle";
 import { getPartnerById } from "@/lib/data/partners";
 import { getSg0NextAction, getSg0WorkflowState } from "@/lib/data/sg0-workflow";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, humanize } from "@/lib/format";
 
 export default async function PartnerDetailPage({
   params,
@@ -29,6 +31,7 @@ export default async function PartnerDetailPage({
   }
 
   const workflow = await getSg0WorkflowState(partner);
+  const requirements = await getPartnerCurrentRequirements(partner.id);
   const nextAction = getSg0NextAction(partner.id, workflow, user);
   const canEdit =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
@@ -93,6 +96,41 @@ export default async function PartnerDetailPage({
         workflow={workflow}
       />
 
+      <Card id="sg0-checklist">
+        <CardHeader>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <CardTitle>SG0 Checklist</CardTitle>
+            <Button asChild variant="outline">
+              <Link href={`/partners/${partner.id}/checklist`}>Open full checklist</Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          {requirements.length > 0 ? (
+            requirements.map((requirement) => (
+              <div
+                className="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
+                key={requirement.id}
+              >
+                <div>
+                  <h3 className="font-medium">{requirement.stage_requirements?.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {requirement.stage_requirements?.description ?? "No description."}
+                  </p>
+                </div>
+                <Badge variant={requirement.status === "complete" ? "default" : "secondary"}>
+                  {humanize(requirement.status)}
+                </Badge>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No checklist items are configured for the current stage.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Partner profile</CardTitle>
@@ -155,9 +193,7 @@ export default async function PartnerDetailPage({
 
           <div className="mt-6">
             <h3 className="font-medium">Initial rationale</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {partner.initial_rationale || "No rationale entered yet."}
-            </p>
+            <InitialRationalePreview value={partner.initial_rationale} />
           </div>
         </CardContent>
       </Card>
