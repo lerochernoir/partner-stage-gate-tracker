@@ -7,10 +7,7 @@ import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { getRegisteredTierId, getSg0StageId } from "@/lib/data/partners";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  partnerFormSchema,
-  requirementUpdateSchema,
-} from "@/lib/validation/partner";
+import { partnerFormSchema } from "@/lib/validation/partner";
 
 export type PartnerFormState = {
   error?: string;
@@ -218,65 +215,6 @@ export async function updatePartnerAction(
   revalidatePath("/partners");
   revalidatePath(`/partners/${partnerId}`);
   redirect(`/partners/${partnerId}`);
-}
-
-export async function updateRequirementAction(
-  partnerId: string,
-  _previousState: PartnerFormState,
-  formData: FormData,
-): Promise<PartnerFormState> {
-  const currentUser = await requireUser();
-  const parsed = requirementUpdateSchema.safeParse({
-    requirementId: formData.get("requirementId"),
-    status: formData.get("status"),
-    notes: formData.get("notes"),
-  });
-
-  if (!parsed.success) {
-    return {
-      error: parsed.error.issues[0]?.message ?? "Invalid requirement update.",
-    };
-  }
-
-  if (parsed.data.status === "blocked" && !parsed.data.notes) {
-    return { error: "Blocked requirements require notes." };
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const completed = parsed.data.status === "complete";
-  const { data: existing } = await supabase
-    .from("partner_stage_requirements")
-    .select("status, notes")
-    .eq("id", parsed.data.requirementId)
-    .maybeSingle();
-
-  const { error } = await supabase
-    .from("partner_stage_requirements")
-    .update({
-      status: parsed.data.status,
-      notes: parsed.data.notes || null,
-      completed_by: completed ? currentUser.id : null,
-      completed_at: completed ? new Date().toISOString() : null,
-      updated_by: currentUser.id,
-    })
-    .eq("id", parsed.data.requirementId)
-    .eq("partner_id", partnerId);
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  await writeAuditEvent(supabase, {
-    actorUserId: currentUser.id,
-    entityType: "partner_stage_requirement",
-    entityId: parsed.data.requirementId,
-    action: "update",
-    oldValue: existing ?? null,
-    newValue: { status: parsed.data.status, notes: parsed.data.notes ?? null },
-  });
-
-  revalidatePath(`/partners/${partnerId}`);
-  return {};
 }
 
 async function initializeSg0Requirements(

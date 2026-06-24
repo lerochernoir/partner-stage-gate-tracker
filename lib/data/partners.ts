@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { PartnerStatus, RequirementStatus } from "@/lib/supabase/types";
+import type { PartnerStatus } from "@/lib/supabase/types";
 
 export type PartnerListRow = {
   id: string;
@@ -27,23 +27,6 @@ export type PartnerDetail = PartnerListRow & {
   current_tier_id: string;
   alliance_manager_id: string;
   executive_sponsor_id: string | null;
-};
-
-export type PartnerRequirementRow = {
-  id: string;
-  status: RequirementStatus;
-  notes: string | null;
-  completed_at: string | null;
-  completed_by_user: { name: string; email: string } | null;
-  owner: { id: string; name: string; email: string } | null;
-  stage_requirements: {
-    id: string;
-    name: string;
-    description: string | null;
-    is_mandatory: boolean;
-    display_order: number;
-    stage_gates: { code: string; name: string } | null;
-  } | null;
 };
 
 export async function getPartners(searchParams?: {
@@ -128,43 +111,6 @@ export async function getPartnerById(partnerId: string) {
 
   if (error) throw error;
   return data;
-}
-
-export async function getCurrentStageRequirements(partnerId: string) {
-  const supabase = await createSupabaseServerClient();
-  const partner = await getPartnerById(partnerId);
-
-  if (!partner) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from("partner_stage_requirements")
-    .select(
-      `
-        id,
-        status,
-        notes,
-        completed_at,
-        owner:users!partner_stage_requirements_owner_id_fkey(id, name, email),
-        completed_by_user:users!partner_stage_requirements_completed_by_fkey(name, email),
-        stage_requirements(
-          id,
-          name,
-          description,
-          is_mandatory,
-          display_order,
-          stage_gates(code, name)
-        )
-      `,
-    )
-    .eq("partner_id", partnerId)
-    .eq("stage_requirements.stage_gate_id", partner.current_stage_id)
-    .order("stage_requirements(display_order)", { ascending: true })
-    .returns<PartnerRequirementRow[]>();
-
-  if (error) throw error;
-  return (data ?? []).filter((row) => row.stage_requirements);
 }
 
 export async function getSg0StageId() {

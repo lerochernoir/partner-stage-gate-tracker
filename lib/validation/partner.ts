@@ -26,15 +26,3 @@ export const partnerFormSchema = z
     message: "Primary partner type must be one of the selected partner types.",
     path: ["primaryPartnerTypeId"],
   });
-
-export const requirementUpdateSchema = z.object({
-  requirementId: z.string().uuid(),
-  status: z.enum([
-    "not_started",
-    "in_progress",
-    "complete",
-    "blocked",
-    "not_applicable",
-  ]),
-  notes: z.string().trim().optional(),
-});

@@ -1,19 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Sg0Requirements } from "@/components/partners/Sg0Requirements";
 import {
   Badge,
   PartnerStatusBadge,
   StageBadge,
   TierBadge,
 } from "@/components/ui/Badge";
-import { updateRequirementAction } from "@/lib/actions/partners";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
-import {
-  getCurrentStageRequirements,
-  getPartnerById,
-} from "@/lib/data/partners";
+import { getPartnerById } from "@/lib/data/partners";
 import { formatDateTime } from "@/lib/format";
 
 export default async function PartnerDetailPage({
@@ -23,10 +18,7 @@ export default async function PartnerDetailPage({
 }) {
   const user = await requireUser();
   const { partnerId } = await params;
-  const [partner, requirements] = await Promise.all([
-    getPartnerById(partnerId),
-    getCurrentStageRequirements(partnerId),
-  ]);
+  const partner = await getPartnerById(partnerId);
 
   if (!partner) {
     notFound();
@@ -35,10 +27,6 @@ export default async function PartnerDetailPage({
   const canEdit =
     hasAnyRole(user, [ROLE_CODES.systemAdmin]) ||
     partner.alliance_manager_id === user.id;
-  const boundUpdateRequirementAction = updateRequirementAction.bind(
-    null,
-    partner.id,
-  );
 
   return (
     <div className="page">
@@ -135,12 +123,6 @@ export default async function PartnerDetailPage({
           <p>{partner.initial_rationale || "No rationale entered yet."}</p>
         </div>
       </section>
-
-      <Sg0Requirements
-        action={boundUpdateRequirementAction}
-        canEdit={canEdit}
-        requirements={requirements}
-      />
     </div>
   );
 }

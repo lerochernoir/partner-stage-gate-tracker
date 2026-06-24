@@ -18,7 +18,7 @@ export default async function NewPartnerPage() {
         <div>
           <h1 className="page-title">Create partner</h1>
           <p className="page-description">
-            Create a partner record and initialize SG0 requirements.
+            Create a partner record and assign ownership, type, tier, and status.
           </p>
         </div>
         <Link className="button secondary" href="/partners">

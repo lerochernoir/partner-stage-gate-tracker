@@ -9,7 +9,6 @@ Blue Yonder alliance Partner Stage Gate Tracker MVP.
 - Partner list
 - Partner detail
 - Partner create/edit
-- SG0 requirement initialization and status tracking
 
 ## Environment
 
