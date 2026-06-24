@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { UserForm } from "@/components/users/UserForm";
+import { PageShell } from "@/components/shared/page-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { createUserAction } from "@/lib/actions/users";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { requireAnyRole } from "@/lib/auth/session";
@@ -10,29 +13,26 @@ export default async function NewUserPage() {
   const roles = await getRoles();
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Create user</h1>
-          <p className="page-description">
-            Create a Supabase Auth user and assign MVP application roles.
-          </p>
-        </div>
-        <Link className="button secondary" href="/admin/users">
-          Back to users
-        </Link>
-      </header>
+    <PageShell
+      description="Create a Supabase Auth user and assign MVP application roles."
+      title="Create user"
+    >
+      <div className="flex justify-end">
+        <Button asChild variant="outline">
+          <Link href="/admin/users">Back to users</Link>
+        </Button>
+      </div>
 
-      <section className="card">
-        <div className="card-body">
+      <Card>
+        <CardContent className="p-6">
           <UserForm
             action={createUserAction}
             includePassword
             roles={roles}
             submitLabel="Create user"
           />
-        </div>
-      </section>
-    </div>
+        </CardContent>
+      </Card>
+    </PageShell>
   );
 }

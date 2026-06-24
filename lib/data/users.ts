@@ -17,13 +17,14 @@ export type UserListRow = {
   }[];
 };
 
+const userSelect =
+  "id, name, email, department, region, status, last_login_at, user_roles(roles(id, code, name))";
+
 export async function getUsers() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("users")
-    .select(
-      "id, name, email, department, region, status, last_login_at, user_roles(roles(id, code, name))",
-    )
+    .select(userSelect)
     .order("name")
     .returns<UserListRow[]>();
 
@@ -35,9 +36,7 @@ export async function getUserById(userId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("users")
-    .select(
-      "id, name, email, department, region, status, last_login_at, user_roles(roles(id, code, name))",
-    )
+    .select(userSelect)
     .eq("id", userId)
     .maybeSingle()
     .returns<UserListRow | null>();

@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PartnerForm } from "@/components/partners/PartnerForm";
+import { PageShell } from "@/components/shared/page-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { updatePartnerAction } from "@/lib/actions/partners";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
@@ -37,19 +40,15 @@ export default async function EditPartnerPage({
   const boundAction = updatePartnerAction.bind(null, partner.id);
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Edit partner</h1>
-          <p className="page-description">{partner.name}</p>
-        </div>
-        <Link className="button secondary" href={`/partners/${partner.id}`}>
-          Back to partner
-        </Link>
-      </header>
+    <PageShell description={partner.name} title="Edit partner">
+      <div className="flex justify-end">
+        <Button asChild variant="outline">
+          <Link href={`/partners/${partner.id}`}>Back to partner</Link>
+        </Button>
+      </div>
 
-      <section className="card">
-        <div className="card-body">
+      <Card>
+        <CardContent className="p-6">
           <PartnerForm
             action={boundAction}
             currentUserId={user.id}
@@ -77,8 +76,8 @@ export default async function EditPartnerPage({
             submitLabel="Save changes"
             users={referenceData.users}
           />
-        </div>
-      </section>
-    </div>
+        </CardContent>
+      </Card>
+    </PageShell>
   );
 }

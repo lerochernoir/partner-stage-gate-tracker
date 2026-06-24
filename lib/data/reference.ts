@@ -1,5 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+export type ReferenceUser = {
+  id: string;
+  name: string;
+  email: string;
+  status: "pending" | "active" | "inactive";
+};
+
 export async function getReferenceData() {
   const supabase = await createSupabaseServerClient();
   const [partnerTypes, partnerTiers, users] = await Promise.all([
@@ -17,7 +24,8 @@ export async function getReferenceData() {
       .from("users")
       .select("id, name, email, status")
       .eq("status", "active")
-      .order("name"),
+      .order("name")
+      .returns<ReferenceUser[]>(),
   ]);
 
   if (partnerTypes.error) throw partnerTypes.error;

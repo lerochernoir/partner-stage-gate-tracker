@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  Badge,
   PartnerStatusBadge,
   StageBadge,
   TierBadge,
-} from "@/components/ui/Badge";
+} from "@/components/shared/status-badges";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { getPartnerById } from "@/lib/data/partners";
@@ -29,29 +31,29 @@ export default async function PartnerDetailPage({
     partner.alliance_manager_id === user.id;
 
   return (
-    <div className="page">
-      <section className="card">
-        <div className="card-body">
-          <div className="detail-header">
+    <div className="grid gap-6">
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
             <div>
-              <h1 className="page-title">{partner.name}</h1>
-              <p className="page-description">
+              <h1 className="text-3xl font-semibold tracking-tight">{partner.name}</h1>
+              <p className="mt-2 text-muted-foreground">
                 {partner.legal_name ?? "No legal name provided"}
               </p>
             </div>
-            <div className="button-row">
+            <div className="flex flex-wrap gap-2">
               {canEdit ? (
-                <Link className="button primary" href={`/partners/${partner.id}/edit`}>
-                  Edit partner
-                </Link>
+                <Button asChild>
+                  <Link href={`/partners/${partner.id}/edit`}>Edit partner</Link>
+                </Button>
               ) : null}
-              <Link className="button secondary" href="/partners">
-                Back to partners
-              </Link>
+              <Button asChild variant="outline">
+                <Link href="/partners">Back to partners</Link>
+              </Button>
             </div>
           </div>
 
-          <div className="pill-row" style={{ marginTop: "1rem" }}>
+          <div className="mt-4 flex flex-wrap gap-2">
             {partner.stage_gates ? (
               <StageBadge code={partner.stage_gates.code} />
             ) : null}
@@ -63,23 +65,25 @@ export default async function PartnerDetailPage({
               assignment.partner_types ? (
                 <Badge
                   key={assignment.partner_types.id}
-                  tone={assignment.is_primary ? "blue" : "gray"}
+                  variant={assignment.is_primary ? "default" : "secondary"}
                 >
                   {assignment.partner_types.name}
                 </Badge>
               ) : null,
             )}
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="card">
-        <div className="card-body">
-          <h2>Partner profile</h2>
-          <dl className="metadata-list">
-            <div className="metadata-item">
+      <Card>
+        <CardHeader>
+          <CardTitle>Partner profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-lg border p-4">
               <dt>Website</dt>
-              <dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
                 {partner.website ? (
                   <a href={partner.website} rel="noreferrer" target="_blank">
                     {partner.website}
@@ -89,40 +93,56 @@ export default async function PartnerDetailPage({
                 )}
               </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Region</dt>
-              <dd>{partner.region ?? "Not set"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">{partner.region ?? "Not set"}</dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Headquarters country</dt>
-              <dd>{partner.headquarters_country ?? "Not set"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.headquarters_country ?? "Not set"}
+              </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Industry focus</dt>
-              <dd>{partner.industry_focus ?? "Not set"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.industry_focus ?? "Not set"}
+              </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Alliance manager</dt>
-              <dd>{partner.alliance_manager?.name ?? "Unassigned"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.alliance_manager?.name ?? "Unassigned"}
+              </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Executive sponsor</dt>
-              <dd>{partner.executive_sponsor?.name ?? "Unassigned"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.executive_sponsor?.name ?? "Unassigned"}
+              </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Created</dt>
-              <dd>{formatDateTime(partner.created_at)}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {formatDateTime(partner.created_at)}
+              </dd>
             </div>
-            <div className="metadata-item">
+            <div className="rounded-lg border p-4">
               <dt>Current stage</dt>
-              <dd>{partner.stage_gates?.name ?? "Not set"}</dd>
+              <dd className="mt-1 text-sm text-muted-foreground">
+                {partner.stage_gates?.name ?? "Not set"}
+              </dd>
             </div>
           </dl>
 
-          <h3>Initial rationale</h3>
-          <p>{partner.initial_rationale || "No rationale entered yet."}</p>
-        </div>
-      </section>
+          <div className="mt-6">
+            <h3 className="font-medium">Initial rationale</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {partner.initial_rationale || "No rationale entered yet."}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

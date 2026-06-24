@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
+import { PageShell } from "@/components/shared/page-shell";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { requireAnyRole } from "@/lib/auth/session";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { getUsers } from "@/lib/data/users";
@@ -10,65 +12,64 @@ export default async function UsersPage() {
   const users = await getUsers();
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Users</h1>
-          <p className="page-description">
-            Manage internal access and Sprint 1 role assignments.
-          </p>
-        </div>
-        <Link className="button primary" href="/admin/users/new">
-          Create user
-        </Link>
-      </header>
+    <PageShell
+      description="Manage internal access and Sprint 1 role assignments."
+      title="Users"
+    >
+      <div className="flex justify-end">
+        <Button asChild>
+          <Link href="/admin/users/new">Create user</Link>
+        </Button>
+      </div>
 
-      <div className="table-wrap">
-        <table>
+      <div className="overflow-x-auto rounded-lg border bg-background">
+        <table className="w-full text-sm">
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Roles</th>
-              <th>Status</th>
-              <th>Last login</th>
-              <th>Action</th>
+            <tr className="border-b bg-muted/50">
+              <th className="px-4 py-3 text-left font-medium">Name</th>
+              <th className="px-4 py-3 text-left font-medium">Email</th>
+              <th className="px-4 py-3 text-left font-medium">Roles</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
+              <th className="px-4 py-3 text-left font-medium">Last login</th>
+              <th className="px-4 py-3 text-left font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id}>
-                <td>
+              <tr className="border-b last:border-0" key={user.id}>
+                <td className="px-4 py-3">
                   <strong>{user.name}</strong>
-                  <p className="help">{user.department ?? "No department"}</p>
+                  <p className="text-muted-foreground">{user.department ?? "No department"}</p>
                 </td>
-                <td>{user.email}</td>
-                <td>
-                  <div className="pill-row">
+                <td className="px-4 py-3">{user.email}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
                     {user.user_roles.map((role) =>
                       role.roles ? (
-                        <Badge key={role.roles.id} tone="gray">
+                        <Badge key={role.roles.id} variant="secondary">
                           {role.roles.name}
                         </Badge>
                       ) : null,
                     )}
                   </div>
                 </td>
-                <td>{humanize(user.status)}</td>
-                <td>{formatDateTime(user.last_login_at)}</td>
-                <td>
-                  <Link className="button secondary" href={`/admin/users/${user.id}`}>
-                    Edit
-                  </Link>
+                <td className="px-4 py-3">{humanize(user.status)}</td>
+                <td className="px-4 py-3">{formatDateTime(user.last_login_at)}</td>
+                <td className="px-4 py-3">
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/admin/users/${user.id}`}>Edit</Link>
+                  </Button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         {users.length === 0 ? (
-          <div className="empty-state">No users have been created yet.</div>
+          <div className="p-8 text-center text-muted-foreground">
+            No users have been created yet.
+          </div>
         ) : null}
       </div>
-    </div>
+    </PageShell>
   );
 }

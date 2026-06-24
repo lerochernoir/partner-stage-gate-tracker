@@ -122,7 +122,7 @@ export async function getSg0StageId() {
     .single();
 
   if (error) throw error;
-  return data.id;
+  return data.id as string;
 }
 
 export async function getRegisteredTierId() {
@@ -134,5 +134,5 @@ export async function getRegisteredTierId() {
     .single();
 
   if (error) throw error;
-  return data.id;
+  return data.id as string;
 }

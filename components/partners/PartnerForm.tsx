@@ -1,6 +1,10 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { PartnerFormState } from "@/lib/actions/partners";
 
 type ReferenceOption = {
@@ -37,6 +41,10 @@ type PartnerFormProps = {
 };
 
 const initialState: PartnerFormState = {};
+const selectClass =
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+const textareaClass =
+  "min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 export function PartnerForm({
   action,
@@ -67,26 +75,15 @@ export function PartnerForm({
   }
 
   return (
-    <form action={formAction} className="form">
-      <div className="grid two">
-        <div className="field">
-          <label className="label" htmlFor="name">
-            Partner name*
-          </label>
-          <input
-            className="input"
-            defaultValue={partner?.name}
-            id="name"
-            name="name"
-            required
-          />
+    <form action={formAction} className="grid gap-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Partner name*</Label>
+          <Input defaultValue={partner?.name} id="name" name="name" required />
         </div>
-        <div className="field">
-          <label className="label" htmlFor="legalName">
-            Legal name
-          </label>
-          <input
-            className="input"
+        <div className="grid gap-2">
+          <Label htmlFor="legalName">Legal name</Label>
+          <Input
             defaultValue={partner?.legalName ?? ""}
             id="legalName"
             name="legalName"
@@ -94,13 +91,10 @@ export function PartnerForm({
         </div>
       </div>
 
-      <div className="grid two">
-        <div className="field">
-          <label className="label" htmlFor="website">
-            Website
-          </label>
-          <input
-            className="input"
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="website">Website</Label>
+          <Input
             defaultValue={partner?.website ?? ""}
             id="website"
             name="website"
@@ -108,12 +102,9 @@ export function PartnerForm({
             type="url"
           />
         </div>
-        <div className="field">
-          <label className="label" htmlFor="headquartersCountry">
-            Headquarters country
-          </label>
-          <input
-            className="input"
+        <div className="grid gap-2">
+          <Label htmlFor="headquartersCountry">Headquarters country</Label>
+          <Input
             defaultValue={partner?.headquartersCountry ?? ""}
             id="headquartersCountry"
             name="headquartersCountry"
@@ -121,24 +112,14 @@ export function PartnerForm({
         </div>
       </div>
 
-      <div className="grid two">
-        <div className="field">
-          <label className="label" htmlFor="region">
-            Region
-          </label>
-          <input
-            className="input"
-            defaultValue={partner?.region ?? ""}
-            id="region"
-            name="region"
-          />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="region">Region</Label>
+          <Input defaultValue={partner?.region ?? ""} id="region" name="region" />
         </div>
-        <div className="field">
-          <label className="label" htmlFor="industryFocus">
-            Industry focus
-          </label>
-          <input
-            className="input"
+        <div className="grid gap-2">
+          <Label htmlFor="industryFocus">Industry focus</Label>
+          <Input
             defaultValue={partner?.industryFocus ?? ""}
             id="industryFocus"
             name="industryFocus"
@@ -146,13 +127,14 @@ export function PartnerForm({
         </div>
       </div>
 
-      <fieldset className="fieldset">
-        <legend className="label">Partner types*</legend>
-        <div className="checkbox-grid">
+      <fieldset className="grid gap-3 rounded-lg border p-4">
+        <legend className="px-1 text-sm font-medium">Partner types*</legend>
+        <div className="grid gap-3 md:grid-cols-2">
           {partnerTypes.map((partnerType) => (
-            <label key={partnerType.id} className="checkbox-label">
+            <label className="flex items-center gap-2 text-sm" key={partnerType.id}>
               <input
                 checked={selectedTypes.has(partnerType.id)}
+                className="h-4 w-4 rounded border-input"
                 name="partnerTypeIds"
                 onChange={() => toggleType(partnerType.id)}
                 type="checkbox"
@@ -164,13 +146,11 @@ export function PartnerForm({
         </div>
       </fieldset>
 
-      <div className="grid two">
-        <div className="field">
-          <label className="label" htmlFor="primaryPartnerTypeId">
-            Primary partner type*
-          </label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="primaryPartnerTypeId">Primary partner type*</Label>
           <select
-            className="select"
+            className={selectClass}
             defaultValue={partner?.primaryPartnerTypeId ?? ""}
             id="primaryPartnerTypeId"
             name="primaryPartnerTypeId"
@@ -186,12 +166,10 @@ export function PartnerForm({
               ))}
           </select>
         </div>
-        <div className="field">
-          <label className="label" htmlFor="currentTierId">
-            Tier*
-          </label>
+        <div className="grid gap-2">
+          <Label htmlFor="currentTierId">Tier*</Label>
           <select
-            className="select"
+            className={selectClass}
             defaultValue={partner?.currentTierId ?? partnerTiers[0]?.id}
             id="currentTierId"
             name="currentTierId"
@@ -206,13 +184,11 @@ export function PartnerForm({
         </div>
       </div>
 
-      <div className="grid two">
-        <div className="field">
-          <label className="label" htmlFor="allianceManagerId">
-            Alliance manager*
-          </label>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="allianceManagerId">Alliance manager*</Label>
           <select
-            className="select"
+            className={selectClass}
             defaultValue={partner?.allianceManagerId ?? currentUserId}
             id="allianceManagerId"
             name="allianceManagerId"
@@ -225,12 +201,10 @@ export function PartnerForm({
             ))}
           </select>
         </div>
-        <div className="field">
-          <label className="label" htmlFor="executiveSponsorId">
-            Executive sponsor
-          </label>
+        <div className="grid gap-2">
+          <Label htmlFor="executiveSponsorId">Executive sponsor</Label>
           <select
-            className="select"
+            className={selectClass}
             defaultValue={partner?.executiveSponsorId ?? ""}
             id="executiveSponsorId"
             name="executiveSponsorId"
@@ -245,12 +219,10 @@ export function PartnerForm({
         </div>
       </div>
 
-      <div className="field">
-        <label className="label" htmlFor="status">
-          Status*
-        </label>
+      <div className="grid gap-2">
+        <Label htmlFor="status">Status*</Label>
         <select
-          className="select"
+          className={selectClass}
           defaultValue={partner?.status ?? "draft"}
           id="status"
           name="status"
@@ -263,22 +235,25 @@ export function PartnerForm({
         </select>
       </div>
 
-      <div className="field">
-        <label className="label" htmlFor="initialRationale">
-          Initial rationale
-        </label>
+      <div className="grid gap-2">
+        <Label htmlFor="initialRationale">Initial rationale</Label>
         <textarea
-          className="textarea"
+          className={textareaClass}
           defaultValue={partner?.initialRationale ?? ""}
           id="initialRationale"
           name="initialRationale"
         />
       </div>
 
-      {state.error ? <p className="error">{state.error}</p> : null}
-      <button className="button primary" disabled={pending} type="submit">
+      {state.error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <Button disabled={pending} type="submit">
         {pending ? "Saving..." : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

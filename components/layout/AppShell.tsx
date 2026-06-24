@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions/auth";
 import { hasAnyRole, type AppUser } from "@/lib/auth/session";
 import { ROLE_CODES } from "@/lib/auth/roles";
@@ -20,34 +21,38 @@ export function AppShell({
   );
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <div className="grid min-h-screen bg-muted/30 lg:grid-cols-[280px_1fr]">
+      <aside className="border-r bg-slate-950 p-6 text-white">
         <div>
-          <div className="brand">Blue Yonder</div>
-          <p className="brand-subtitle">Alliance Stage Gate Tracker</p>
+          <div className="text-lg font-semibold">Blue Yonder</div>
+          <p className="mt-1 text-sm text-slate-300">Alliance Stage Gate Tracker</p>
         </div>
-        <nav className="nav-list" aria-label="Primary navigation">
+        <nav className="mt-8 grid gap-1" aria-label="Primary navigation">
           {visibleNav.map((item) => (
-            <Link key={item.href} className="nav-link" href={item.href}>
+            <Link
+              key={item.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/10"
+              href={item.href}
+            >
               {item.label}
             </Link>
           ))}
         </nav>
       </aside>
 
-      <div className="content-shell">
-        <header className="topbar">
+      <div className="min-w-0">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-6 py-4 backdrop-blur">
           <div>
-            <strong>{user.name}</strong>
-            <p>{user.email}</p>
+            <strong className="text-sm">{user.name}</strong>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
           <form action={logoutAction}>
-            <button className="button secondary" type="submit">
+            <Button type="submit" variant="outline">
               Log out
-            </button>
+            </Button>
           </form>
         </header>
-        <main className="main-content">{children}</main>
+        <main className="p-6">{children}</main>
       </div>
     </div>
   );

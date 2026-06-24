@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { UserForm } from "@/components/users/UserForm";
+import { PageShell } from "@/components/shared/page-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { updateUserAction } from "@/lib/actions/users";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { requireAnyRole } from "@/lib/auth/session";
@@ -23,19 +26,15 @@ export default async function EditUserPage({
   const boundAction = updateUserAction.bind(null, user.id);
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Edit user</h1>
-          <p className="page-description">{user.email}</p>
-        </div>
-        <Link className="button secondary" href="/admin/users">
-          Back to users
-        </Link>
-      </header>
+    <PageShell description={user.email} title="Edit user">
+      <div className="flex justify-end">
+        <Button asChild variant="outline">
+          <Link href="/admin/users">Back to users</Link>
+        </Button>
+      </div>
 
-      <section className="card">
-        <div className="card-body">
+      <Card>
+        <CardContent className="p-6">
           <UserForm
             action={boundAction}
             roles={roles}
@@ -51,8 +50,8 @@ export default async function EditUserPage({
                 .filter((roleId): roleId is string => Boolean(roleId)),
             }}
           />
-        </div>
-      </section>
-    </div>
+        </CardContent>
+      </Card>
+    </PageShell>
   );
 }

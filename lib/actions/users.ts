@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
-import { requireAnyRole } from "@/lib/auth/session";
 import { ROLE_CODES } from "@/lib/auth/roles";
+import { requireAnyRole } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { editUserFormSchema, userFormSchema } from "@/lib/validation/user";
@@ -108,8 +107,8 @@ export async function updateUserAction(
 
   if (
     systemAdminRole &&
-    !parsed.data.roleIds.includes(systemAdminRole.id) &&
-    (await isLastActiveAdmin(admin, userId, systemAdminRole.id))
+    !parsed.data.roleIds.includes(systemAdminRole.id as string) &&
+    (await isLastActiveAdmin(admin, userId, systemAdminRole.id as string))
   ) {
     return { error: "At least one active System Admin must remain." };
   }
@@ -174,5 +173,3 @@ async function isLastActiveAdmin(
 
   return (data ?? []).length === 0;
 }
-
-export type UserFormInput = z.infer<typeof userFormSchema>;

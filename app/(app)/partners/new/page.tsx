@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { PartnerForm } from "@/components/partners/PartnerForm";
+import { PageShell } from "@/components/shared/page-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { createPartnerAction } from "@/lib/actions/partners";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { requireAnyRole } from "@/lib/auth/session";
@@ -13,21 +16,18 @@ export default async function NewPartnerPage() {
   const referenceData = await getReferenceData();
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Create partner</h1>
-          <p className="page-description">
-            Create a partner record and assign ownership, type, tier, and status.
-          </p>
-        </div>
-        <Link className="button secondary" href="/partners">
-          Back to partners
-        </Link>
-      </header>
+    <PageShell
+      description="Create a partner record and assign ownership, type, tier, and status."
+      title="Create partner"
+    >
+      <div className="flex justify-end">
+        <Button asChild variant="outline">
+          <Link href="/partners">Back to partners</Link>
+        </Button>
+      </div>
 
-      <section className="card">
-        <div className="card-body">
+      <Card>
+        <CardContent className="p-6">
           <PartnerForm
             action={createPartnerAction}
             currentUserId={user.id}
@@ -36,8 +36,8 @@ export default async function NewPartnerPage() {
             submitLabel="Create partner"
             users={referenceData.users}
           />
-        </div>
-      </section>
-    </div>
+        </CardContent>
+      </Card>
+    </PageShell>
   );
 }

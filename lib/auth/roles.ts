@@ -6,6 +6,10 @@ export const ROLE_CODES = {
   financeReviewer: "finance_reviewer",
   gtmReviewer: "gtm_reviewer",
   viewer: "viewer",
+  productTechnicalReviewer: "product_technical_reviewer",
+  deliveryOperationsReviewer: "delivery_operations_reviewer",
+  marketplaceOperationsReviewer: "marketplace_operations_reviewer",
+  legalComplianceReviewer: "legal_compliance_reviewer",
 } as const;
 
 export type RoleCode = (typeof ROLE_CODES)[keyof typeof ROLE_CODES];
@@ -18,4 +22,8 @@ export const ROLE_LABELS: Record<RoleCode, string> = {
   finance_reviewer: "Finance Reviewer",
   gtm_reviewer: "GTM Reviewer",
   viewer: "Viewer",
+  product_technical_reviewer: "Product / Technical Reviewer",
+  delivery_operations_reviewer: "Delivery / Operations Reviewer",
+  marketplace_operations_reviewer: "Marketplace Operations Reviewer",
+  legal_compliance_reviewer: "Legal / Compliance Reviewer",
 };

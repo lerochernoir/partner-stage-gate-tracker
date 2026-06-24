@@ -79,23 +79,23 @@ export async function createPartnerAction(
     return { error: partnerError.message };
   }
 
-  const assignmentRows = parsed.data.partnerTypeIds.map((partnerTypeId) => ({
-    partner_id: partner.id,
-    partner_type_id: partnerTypeId,
-    is_primary: partnerTypeId === parsed.data.primaryPartnerTypeId,
-    assigned_by: currentUser.id,
-  }));
-
   const { error: typeError } = await supabase
     .from("partner_type_assignments")
-    .insert(assignmentRows);
+    .insert(
+      parsed.data.partnerTypeIds.map((partnerTypeId) => ({
+        partner_id: partner.id,
+        partner_type_id: partnerTypeId,
+        is_primary: partnerTypeId === parsed.data.primaryPartnerTypeId,
+        assigned_by: currentUser.id,
+      })),
+    );
 
   if (typeError) {
     return { error: typeError.message };
   }
 
   const initError = await initializeSg0Requirements(
-    partner.id,
+    partner.id as string,
     parsed.data.allianceManagerId,
     currentUser.id,
   );
@@ -113,7 +113,7 @@ export async function createPartnerAction(
   await writeAuditEvent(supabase, {
     actorUserId: currentUser.id,
     entityType: "partner",
-    entityId: partner.id,
+    entityId: partner.id as string,
     action: "create",
     newValue: { name: parsed.data.name, status: parsed.data.status },
   });
