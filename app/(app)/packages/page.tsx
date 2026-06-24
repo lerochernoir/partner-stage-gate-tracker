@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ export default async function PackagesPage() {
   try {
     packages = await getPackages();
   } catch (error) {
+    unstable_rethrow(error);
     console.error("[route:/packages] Failed to load packages page.", error);
 
     return (

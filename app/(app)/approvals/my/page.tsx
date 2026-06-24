@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ export default async function MyApprovalsPage() {
   try {
     approvals = await getMyApprovals(user);
   } catch (error) {
+    unstable_rethrow(error);
     console.error("[route:/approvals/my] Failed to load my approvals page.", error);
 
     return (

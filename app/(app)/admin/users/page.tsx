@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { PageShell } from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export default async function UsersPage() {
   try {
     users = await getUsers();
   } catch (error) {
+    unstable_rethrow(error);
     console.error("[route:/admin/users] Failed to load users page.", error);
 
     return (
