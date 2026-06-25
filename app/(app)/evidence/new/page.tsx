@@ -37,16 +37,19 @@ export default async function NewEvidencePage() {
               </option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Evidence is automatically attached to this partner's current stage gate.
+          </p>
         </div>
 
         <div>
           <label className="mb-2 block text-sm font-medium">Evidence Type</label>
           <select name="evidence_type" required className="w-full rounded-md border p-2">
-           <option value="document">Document</option>
-<option value="url">URL</option>
-<option value="note">Note</option>
-<option value="confirmation">Confirmation</option>
-<option value="package_field">Package Field</option>
+            <option value="document">Document</option>
+            <option value="url">URL</option>
+            <option value="note">Note</option>
+            <option value="confirmation">Confirmation</option>
+            <option value="package_field">Package Field</option>
           </select>
         </div>
 
@@ -62,7 +65,7 @@ export default async function NewEvidencePage() {
 
         <div>
           <label className="mb-2 block text-sm font-medium">Description</label>
-          <textarea name="description" rows={5} className="w-full rounded-md border p-2" />
+          <textarea name="description" rows={3} className="w-full rounded-md border p-2" />
         </div>
 
         <div>
@@ -73,6 +76,14 @@ export default async function NewEvidencePage() {
             className="w-full rounded-md border p-2"
             placeholder="https://sharepoint..."
           />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Content / Notes</label>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Required if you don't provide a Reference URL above.
+          </p>
+          <textarea name="text_value" rows={5} className="w-full rounded-md border p-2" />
         </div>
 
         <div className="flex justify-end">
