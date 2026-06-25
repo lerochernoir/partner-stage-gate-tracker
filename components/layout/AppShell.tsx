@@ -29,14 +29,14 @@ export function AppShell({
     <div className="grid min-h-screen bg-muted/30 lg:grid-cols-[280px_1fr]">
       <aside className="border-r bg-slate-950 p-6 text-white">
         <div>
-  <Image
+<Image
   src="/images/castlegate-logo.png"
   alt="CastleGate"
-  width={105}
-  height={48}
+  width={52}
+  height={24}
   priority
-  className="h-auto w-full max-w-[105px] object-contain"
- />
+  className="h-auto w-full max-w-[52px] object-contain"
+/>
   <p className="mt-2 text-sm text-slate-300">
     Partner Governance Platform
   </p>
