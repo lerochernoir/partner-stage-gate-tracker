@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { NavItem } from "@/components/layout/NavItem";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/actions/auth";
 import { hasAnyRole, type AppUser } from "@/lib/auth/session";
@@ -59,15 +59,9 @@ export function AppShell({
         </div>
 
         <nav className="mt-8 grid gap-1" aria-label="Primary navigation">
-          {visibleNav.map((item) => (
-            <Link
-              key={item.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-slate-100 transition-colors hover:bg-white/10"
-              href={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
+         {visibleNav.map((item) => (
+  <NavItem key={item.href} href={item.href} label={item.label} />
+))}
         </nav>
       </aside>
 
