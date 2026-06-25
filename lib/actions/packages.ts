@@ -14,6 +14,12 @@ import { createDraftPackageForStage } from "@/lib/workflows/stage-packages";
 export type PackageActionState = {
   error?: string;
   success?: string;
+  statusError?: string;
+};
+
+type AutosaveResult = PackageActionState & {
+  sectionStatus?: string;
+  packageStatus?: string;
 };
 
 const sectionUpdateSchema = z.object({
@@ -286,15 +292,23 @@ export async function updatePackageSectionAction(
     newValue: { status: parsed.data.content ? "complete" : "draft" },
   });
 
+  // The section content is now persisted. The package-status rollup is a
+  // best-effort follow-up: if it fails, the content save must NOT be reported
+  // as a failure. Surface a specific status-update error instead.
   const statusResult = await recalculatePackageEditStatus(
     supabase,
     parsed.data.packageId,
   );
-  if (statusResult.error) {
-    return { error: statusResult.error };
-  }
 
   revalidatePath(`/packages/${parsed.data.packageId}`);
+
+  if (statusResult.error) {
+    return {
+      success: "Section saved.",
+      statusError: `Section content saved, but the package status could not be updated: ${statusResult.error}`,
+    };
+  }
+
   return { success: "Section saved." };
 }
 
@@ -302,7 +316,7 @@ export async function autosavePackageSectionAction(input: {
   packageId: string;
   sectionId: string;
   content: string;
-}) {
+}): Promise<AutosaveResult> {
   const currentUser = await requireUser();
   const parsed = sectionAutosaveSchema.safeParse(input);
 
@@ -341,15 +355,25 @@ export async function autosavePackageSectionAction(input: {
     return { error: error.message };
   }
 
+  // The section content is now persisted. The package-status rollup is a
+  // best-effort follow-up: if it fails, the content save must NOT be reported
+  // as a failure ("Autosave failed"). Surface a specific status-update error
+  // instead so the editor can show the content as saved.
   const statusResult = await recalculatePackageEditStatus(
     supabase,
     parsed.data.packageId,
   );
-  if (statusResult.error) {
-    return { error: statusResult.error };
-  }
 
   revalidatePath(`/packages/${parsed.data.packageId}`);
+
+  if (statusResult.error) {
+    return {
+      success: "Section saved.",
+      sectionStatus,
+      statusError: `Section content saved, but the package status could not be updated: ${statusResult.error}`,
+    };
+  }
+
   return {
     success: "Autosaved.",
     sectionStatus,

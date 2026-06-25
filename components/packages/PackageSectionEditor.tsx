@@ -50,6 +50,11 @@ export function PackageSectionEditor({
               <AlertDescription>{state.error}</AlertDescription>
             </Alert>
           ) : null}
+          {!state.error && state.statusError ? (
+            <Alert>
+              <AlertDescription>{state.statusError}</AlertDescription>
+            </Alert>
+          ) : null}
           {state.success ? (
             <p className="text-sm text-muted-foreground">{state.success}</p>
           ) : null}
