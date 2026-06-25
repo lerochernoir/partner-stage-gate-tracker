@@ -42,13 +42,11 @@ export default async function NewEvidencePage() {
         <div>
           <label className="mb-2 block text-sm font-medium">Evidence Type</label>
           <select name="evidence_type" required className="w-full rounded-md border p-2">
-            <option value="architecture">Architecture</option>
-            <option value="contract">Contract</option>
-            <option value="security">Security</option>
-            <option value="financial">Financial</option>
-            <option value="customer_validation">Customer Validation</option>
-            <option value="meeting_notes">Meeting Notes</option>
-            <option value="other">Other</option>
+           <option value="document">Document</option>
+<option value="url">URL</option>
+<option value="note">Note</option>
+<option value="confirmation">Confirmation</option>
+<option value="package_field">Package Field</option>
           </select>
         </div>
 
