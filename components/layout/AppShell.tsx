@@ -32,10 +32,10 @@ export function AppShell({
 <Image
   src="/images/castlegate-logo.png"
   alt="CastleGate"
-  width={70}
-  height={32}
+  width={140}
+  height={64}
   priority
-  className="mx-auto h-auto w-[70px] object-contain"
+  className="mx-auto h-auto w-[140px] object-contain"
 />
   <p className="mt-2 text-sm text-slate-300">
     Partner Governance Platform
