@@ -7,25 +7,23 @@ export async function createEvidenceAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
 
   const partnerId = String(formData.get("partner_id") || "");
-  const stageCode = String(formData.get("stage_code") || "SG0");
   const evidenceType = String(formData.get("evidence_type") || "document");
   const title = String(formData.get("title") || "");
   const description = String(formData.get("description") || "");
-  const url = String(formData.get("url") || "");
+  const externalUrl = String(formData.get("url") || "");
 
   if (!partnerId || !title) {
     throw new Error("Partner and title are required.");
   }
 
   const { error } = await supabase.from("evidence").insert({
-  partner_id: partnerId,
-  stage_gate_id: null,
-  evidence_type: evidenceType,
-  title,
-  description,
-  external_url: url,
-  status: "draft",
-  submitted_at: new Date().toISOString(),
+    partner_id: partnerId,
+    evidence_type: evidenceType,
+    title,
+    description,
+    external_url: externalUrl,
+    status: "draft",
+    submitted_at: new Date().toISOString(),
   });
 
   if (error) throw error;
