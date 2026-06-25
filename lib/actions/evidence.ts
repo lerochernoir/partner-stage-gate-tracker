@@ -25,7 +25,7 @@ export async function createEvidenceAction(formData: FormData): Promise<void> {
     title,
     description: description || null,
     external_url: externalUrl || null,
-    status: "draft",
+    status: "submitted",
     created_by: currentUser.id,
     updated_by: currentUser.id,
   });
