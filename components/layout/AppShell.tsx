@@ -28,8 +28,8 @@ export function AppShell({
     <div className="grid min-h-screen bg-muted/30 lg:grid-cols-[280px_1fr]">
       <aside className="border-r bg-slate-950 p-6 text-white">
         <div>
-          <div className="text-lg font-semibold">Blue Yonder</div>
-          <p className="mt-1 text-sm text-slate-300">Alliance Stage Gate Tracker</p>
+          <div className="text-lg font-semibold">CastleGate</div>
+          <p className="mt-1 text-sm text-slate-300">Partner Governance Platform</p>
         </div>
         <nav className="mt-8 grid gap-1" aria-label="Primary navigation">
           {visibleNav.map((item) => (
@@ -57,6 +57,9 @@ export function AppShell({
           </form>
         </header>
         <main className="p-6">{children}</main>
+        <footer className="border-t px-6 py-4 text-xs text-muted-foreground">
+          CastleGate · Partner Governance Platform
+        </footer>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ values
     ('isv', 'ISV', 'Independent software vendor building complementary applications, extensions, or integrations.'),
     ('si', 'SI', 'Systems integrator delivering implementation, transformation, managed services, or advisory services.'),
     ('marketplace', 'Marketplace', 'Partner offering or transacting through a marketplace/channel motion.'),
-    ('oem', 'OEM', 'Partner embedding, white-labeling, bundling, or reselling Blue Yonder capabilities.'),
+    ('oem', 'OEM', 'Partner embedding, white-labeling, bundling, or reselling platform capabilities.'),
     ('data_provider', 'Data Provider', 'Partner supplying external data, signals, forecasts, benchmarks, enrichment, or analytics inputs.')
 on conflict (code) do update
 set
@@ -55,7 +55,7 @@ values
     (
         'SG1',
         'Strategic Qualification',
-        'Confirm strategic alignment with Blue Yonder alliance priorities.',
+        'Confirm strategic alignment with partner governance priorities.',
         1,
         'SG0 Identification has been approved.',
         'Strategic fit, market alignment, executive sponsorship, and qualification recommendation are approved.'
@@ -104,16 +104,16 @@ join (
     values
         ('SG0', 'Partner profile completed', 'Partner name, legal name where available, website, region, country, and industry focus are captured.', 'profile', true, 'alliance_manager', 10),
         ('SG0', 'Partner type selected', 'At least one partner type is assigned and a primary type is selected when multiple types apply.', 'profile', true, 'alliance_manager', 20),
-        ('SG0', 'Alliance manager assigned', 'A Blue Yonder alliance manager owns the partner record.', 'profile', true, 'alliance_manager', 30),
+        ('SG0', 'Alliance manager assigned', 'An assigned partner manager owns the partner record.', 'profile', true, 'alliance_manager', 30),
         ('SG0', 'Initial rationale captured', 'The initial alliance hypothesis and rationale are documented.', 'recommendation', true, 'alliance_manager', 40),
-        ('SG1', 'Strategic fit summary completed', 'Strategic alignment with Blue Yonder priorities is documented.', 'strategic', true, 'alliance_manager', 10),
+        ('SG1', 'Strategic fit summary completed', 'Strategic alignment with partner governance priorities is documented.', 'strategic', true, 'alliance_manager', 10),
         ('SG1', 'Market alignment completed', 'Target market, region, industry, or segment alignment is documented.', 'strategic', true, 'alliance_manager', 20),
         ('SG1', 'Product or services adjacency captured', 'Solution, data, service, or route-to-market adjacency is documented.', 'strategic', true, 'alliance_manager', 30),
         ('SG1', 'Executive sponsor identified', 'Executive sponsorship is identified for the alliance motion.', 'review', true, 'alliance_manager', 40),
         ('SG1', 'Qualification recommendation entered', 'Recommendation to advance, reject, or rework is documented.', 'recommendation', true, 'alliance_manager', 50),
         ('SG2', 'Business case summary completed', 'The business case and strategic thesis are documented.', 'business_case', true, 'alliance_manager', 10),
         ('SG2', 'Revenue or pipeline hypothesis entered', 'Estimated pipeline or revenue opportunity is documented.', 'business_case', true, 'alliance_manager', 20),
-        ('SG2', 'Investment need captured', 'Required Blue Yonder and partner-side investment assumptions are captured.', 'business_case', true, 'alliance_manager', 30),
+        ('SG2', 'Investment need captured', 'Required organization and partner-side investment assumptions are captured.', 'business_case', true, 'alliance_manager', 30),
         ('SG2', 'Risk summary entered', 'Material commercial, operational, legal, or execution risks are summarized.', 'risk', true, 'alliance_manager', 40),
         ('SG2', 'Finance review completed', 'Finance reviewer has reviewed business case economics.', 'review', true, 'finance_reviewer', 50),
         ('SG2', 'GTM review completed', 'GTM reviewer has reviewed go-to-market and commercial assumptions.', 'review', true, 'gtm_reviewer', 60),

@@ -1,6 +1,6 @@
 # Supabase PostgreSQL Database Design
 
-## Blue Yonder Alliance Partner Stage Gate Tracker MVP
+## CastleGate Partner Governance Platform MVP
 
 This document is the complete database-only design for the approved MVP, governance specification, user stories, and acceptance criteria.
 

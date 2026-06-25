@@ -35,7 +35,7 @@ export default async function PartnersPage({
 
   return (
     <PageShell
-      description="Search and manage Blue Yonder alliance partner records."
+      description="Search and manage partner governance records."
       title="Partners"
     >
       <div className="flex justify-end">

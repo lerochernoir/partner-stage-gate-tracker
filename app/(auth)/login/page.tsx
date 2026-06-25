@@ -14,10 +14,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Blue Yonder Alliances
+            CastleGate
           </p>
           <CardTitle>Sign in</CardTitle>
-          <CardDescription>Access the Partner Stage Gate Tracker.</CardDescription>
+          <CardDescription>Access the Partner Governance Platform.</CardDescription>
         </CardHeader>
         <CardContent>
           <Suspense>

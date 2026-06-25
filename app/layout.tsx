@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Alliance Stage Gate Tracker",
-  description: "Blue Yonder alliance partner stage gate tracker MVP.",
+  title: "CastleGate",
+  description: "CastleGate Partner Governance Platform.",
 };
 
 export default function RootLayout({

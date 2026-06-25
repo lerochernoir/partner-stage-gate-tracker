@@ -1,4 +1,4 @@
-# Blue Yonder Alliance Partner Stage Gate Tracker MVP ERD
+# CastleGate Partner Governance Platform MVP ERD
 
 This ERD covers the MVP database scope:
 

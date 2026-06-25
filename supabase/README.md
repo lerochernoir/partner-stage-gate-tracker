@@ -1,6 +1,6 @@
 # Supabase PostgreSQL Implementation
 
-## Blue Yonder Alliance Partner Stage Gate Tracker MVP
+## CastleGate Partner Governance Platform MVP
 
 This directory contains the complete Supabase PostgreSQL implementation for the approved MVP database scope:
 

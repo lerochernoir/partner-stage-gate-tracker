@@ -1,6 +1,6 @@
-# Partner Stage Gate Tracker
+# CastleGate
 
-Blue Yonder alliance Partner Stage Gate Tracker MVP.
+CastleGate Partner Governance Platform MVP.
 
 The MVP manages partner stage-gate execution from SG0 through SG2:
 

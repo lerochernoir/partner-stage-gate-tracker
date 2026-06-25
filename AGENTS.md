@@ -2,7 +2,7 @@
 
 ## Cursor Cloud specific instructions
 
-This is a single Next.js 16 / React 19 app ("Partner Stage Gate Tracker") backed by a hosted Supabase project (PostgreSQL + Auth). There is no separate backend service and no local Supabase/Docker stack — all data access goes through the hosted Supabase instance. See `README.md` for the canonical command list and full MVP test flow.
+This is a single Next.js 16 / React 19 app ("CastleGate") backed by a hosted Supabase project (PostgreSQL + Auth). There is no separate backend service and no local Supabase/Docker stack — all data access goes through the hosted Supabase instance. See `README.md` for the canonical command list and full MVP test flow.
 
 ### Environment variables
 - The app and scripts read three required Supabase values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. In Cursor Cloud these are injected as environment secrets.

@@ -1,8 +1,8 @@
 {
-  "name": "partner-stage-gate-tracker",
+  "name": "castlegate",
   "version": "1.0.0",
   "private": true,
-  "description": "Blue Yonder alliance partner stage gate tracker MVP.",
+  "description": "CastleGate Partner Governance Platform MVP.",
   "directories": {
     "doc": "docs"
   },

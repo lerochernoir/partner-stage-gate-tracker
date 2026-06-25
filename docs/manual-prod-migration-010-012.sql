@@ -147,7 +147,7 @@ select
 from public.stage_gates stage
 join (
     values
-        ('solution_fit', 'Solution Fit', 'Describe how the partner solution fits the Blue Yonder alliance motion.', 10),
+        ('solution_fit', 'Solution Fit', 'Describe how the partner solution fits the partner governance motion.', 10),
         ('integration_requirements', 'Integration Requirements', 'Document integration scope, dependencies, APIs, and constraints.', 20),
         ('technical_architecture', 'Technical Architecture', 'Capture the proposed technical architecture and validation assumptions.', 30),
         ('customer_use_case', 'Customer Use Case', 'Describe target customer use cases and value realization.', 40),
