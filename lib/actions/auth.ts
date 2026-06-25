@@ -40,7 +40,15 @@ export async function loginAction(
       .eq("id", user.id);
   }
 
-  redirect(next.startsWith("/") ? next : "/partners");
+  redirect(safeRedirectPath(next));
+}
+
+function safeRedirectPath(next: string) {
+  if (next.startsWith("/") && !next.startsWith("//")) {
+    return next;
+  }
+
+  return "/partners";
 }
 
 export async function logoutAction() {

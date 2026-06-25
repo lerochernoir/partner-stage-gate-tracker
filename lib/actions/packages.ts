@@ -7,8 +7,8 @@ import { writeAuditEvent } from "@/lib/audit";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
 import { getPartnerById } from "@/lib/data/partners";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isEditablePackageStatus } from "@/lib/packages/status";
 import { createDraftPackageForStage } from "@/lib/workflows/stage-packages";
 
 export type PackageActionState = {
@@ -57,136 +57,6 @@ export async function createStageGatePackageFromWorkflowAction(formData: FormDat
   }
 
   redirect(`/packages/${result.packageId}`);
-}
-
-export async function initializeStageGatePackageForPartner(partnerId: string) {
-  const currentUser = await requireUser();
-  const admin = createSupabaseAdminClient();
-  const { data: partner, error: partnerError } = await admin
-    .from("partners")
-    .select(
-      `
-        id,
-        status,
-        current_stage_id,
-        current_tier_id,
-        partner_type_assignments(partner_type_id)
-      `,
-    )
-    .eq("id", partnerId)
-    .maybeSingle();
-
-  if (partnerError) return partnerError.message;
-  if (!partner) return "Partner not found.";
-  if (partner.status === "rejected" || partner.status === "on_hold") {
-    return "Packages cannot be created for rejected or on-hold partners.";
-  }
-
-  const { data: existingActive } = await admin
-    .from("stage_gate_packages")
-    .select("id")
-    .eq("partner_id", partner.id)
-    .eq("stage_gate_id", partner.current_stage_id)
-    .in("status", ["draft", "submitted", "in_review", "rework_required"])
-    .limit(1)
-    .maybeSingle();
-
-  if (existingActive) return undefined;
-
-  const { data: versions, error: versionsError } = await admin
-    .from("stage_gate_packages")
-    .select("package_version")
-    .eq("partner_id", partner.id)
-    .eq("stage_gate_id", partner.current_stage_id)
-    .order("package_version", { ascending: false })
-    .limit(1);
-
-  if (versionsError) return versionsError.message;
-
-  const nextVersion = Number(versions?.[0]?.package_version ?? 0) + 1;
-  const { data: stagePackage, error: packageError } = await admin
-    .from("stage_gate_packages")
-    .insert({
-      partner_id: partner.id,
-      stage_gate_id: partner.current_stage_id,
-      package_version: nextVersion,
-      status: "draft",
-      created_by: currentUser.id,
-      updated_by: currentUser.id,
-    })
-    .select("id")
-    .single();
-
-  if (packageError) return packageError.message;
-
-  const { data: templates, error: templatesError } = await admin
-    .from("stage_gate_package_section_templates")
-    .select("section_type, title, display_order, partner_type_id, partner_tier_id")
-    .eq("stage_gate_id", partner.current_stage_id)
-    .eq("is_active", true);
-
-  if (templatesError) return templatesError.message;
-
-  const partnerTypeIds = new Set(
-    (partner.partner_type_assignments ?? [])
-      .map((assignment) => assignment.partner_type_id)
-      .filter((id): id is string => Boolean(id)),
-  );
-  const sectionMap = new Map<
-    string,
-    { section_type: string; title: string; display_order: number }
-  >();
-
-  for (const template of templates ?? []) {
-    const appliesToType =
-      !template.partner_type_id || partnerTypeIds.has(template.partner_type_id as string);
-    const appliesToTier =
-      !template.partner_tier_id || template.partner_tier_id === partner.current_tier_id;
-
-    if (!appliesToType || !appliesToTier) continue;
-
-    const current = {
-      section_type: template.section_type as string,
-      title: template.title as string,
-      display_order: Number(template.display_order ?? 0),
-    };
-    const existing = sectionMap.get(current.section_type);
-    if (!existing || current.display_order <= existing.display_order) {
-      sectionMap.set(current.section_type, current);
-    }
-  }
-
-  const sections = Array.from(sectionMap.values()).sort(
-    (a, b) => a.display_order - b.display_order,
-  );
-
-  if (sections.length > 0) {
-    const { error: sectionsError } = await admin
-      .from("stage_gate_package_sections")
-      .insert(
-        sections.map((section) => ({
-          stage_gate_package_id: stagePackage.id,
-          section_type: section.section_type,
-          title: section.title,
-          display_order: section.display_order,
-          status: "draft",
-          content: "",
-          updated_by: currentUser.id,
-        })),
-      );
-
-    if (sectionsError) return sectionsError.message;
-  }
-
-  await writeAuditEvent(admin, {
-    actorUserId: currentUser.id,
-    entityType: "stage_gate_package",
-    entityId: stagePackage.id as string,
-    action: "create",
-    newValue: { partnerId: partner.id, packageVersion: nextVersion },
-  });
-
-  return undefined;
 }
 
 async function createStageGatePackage(
@@ -519,12 +389,6 @@ async function submitStageGatePackage(packageId: string) {
   revalidatePath("/approvals/my");
   revalidatePath(`/approvals/${approval.approvalId}`);
   return { approvalId: approval.approvalId };
-}
-
-function isEditablePackageStatus(status: string) {
-  return ["draft", "in_progress", "ready_for_review", "rework_required"].includes(
-    status,
-  );
 }
 
 async function recalculatePackageEditStatus(
