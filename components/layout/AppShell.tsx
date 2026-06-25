@@ -38,7 +38,7 @@ export function AppShell({
   className="mx-auto h-auto w-[70px] object-contain"
 />
   <p className="mt-2 text-sm text-slate-300">
-    Partner Governance <br>Platform</br>
+    Partner Governance Platform
   </p>
 </div>
         <nav className="mt-8 grid gap-1" aria-label="Primary navigation">
