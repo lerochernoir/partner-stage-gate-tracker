@@ -18,13 +18,14 @@ export async function createEvidenceAction(formData: FormData) {
   }
 
   const { error } = await supabase.from("evidence").insert({
-    partner_id: partnerId,
-    stage_gate_id: null,
-    evidence_type: evidenceType,
-    title,
-    description,
-    url,
-    status: "draft",
+  partner_id: partnerId,
+  stage_gate_id: null,
+  evidence_type: evidenceType,
+  title,
+  description,
+  external_url: url,
+  status: "draft",
+  submitted_at: new Date().toISOString(),
   });
 
   if (error) throw error;
