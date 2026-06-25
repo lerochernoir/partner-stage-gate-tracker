@@ -26,7 +26,7 @@ export default async function NewEvidencePage() {
         </Link>
       </div>
 
-      <form action={createEvidenceAction.bind(null, {})} className="space-y-6 rounded-lg border p-6">
+      <form action={createEvidenceAction} className="space-y-6 rounded-lg border p-6">
         <div>
           <label className="mb-2 block text-sm font-medium">Partner</label>
           <select name="partner_id" required className="w-full rounded-md border p-2">
