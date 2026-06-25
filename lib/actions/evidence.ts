@@ -19,7 +19,7 @@ export async function createEvidenceAction(formData: FormData) {
 
   const { error } = await supabase.from("evidence").insert({
     partner_id: partnerId,
-    stage_code: stageCode,
+    stage_gate_id: null,
     evidence_type: evidenceType,
     title,
     description,
