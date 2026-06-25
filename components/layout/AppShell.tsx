@@ -37,9 +37,12 @@ export function AppShell({
   priority
   className="mx-auto h-auto w-[140px] object-contain"
 />
-  <p className="mt-2 text-sm text-slate-300">
-    Partner Governance Platform
-  </p>
+  <p className="mt-3 text-center text-xs uppercase tracking-[0.25em] text-slate-400">
+  Ecosystem Lifecycle Management
+</p>
+<p className="mt-1 text-center text-[11px] font-semibold tracking-[0.35em] text-slate-500">
+  ELM
+</p>
 </div>
         <nav className="mt-8 grid gap-1" aria-label="Primary navigation">
           {visibleNav.map((item) => (
