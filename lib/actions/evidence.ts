@@ -5,14 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type EvidenceFormState = {
-  error?: string;
-};
-
-export async function createEvidenceAction(
-  _previousState: EvidenceFormState,
-  formData: FormData,
-): Promise<EvidenceFormState> {
+export async function createEvidenceAction(formData: FormData): Promise<void> {
   const currentUser = await requireUser();
   const supabase = await createSupabaseServerClient();
 
@@ -22,12 +15,8 @@ export async function createEvidenceAction(
   const description = String(formData.get("description") || "").trim();
   const externalUrl = String(formData.get("url") || "").trim();
 
-  if (!partnerId) {
-    return { error: "Partner is required." };
-  }
-
-  if (!title) {
-    return { error: "Title is required." };
+  if (!partnerId || !title) {
+    throw new Error("Partner and title are required.");
   }
 
   const { error } = await supabase.from("evidence").insert({
@@ -42,7 +31,7 @@ export async function createEvidenceAction(
   });
 
   if (error) {
-    return { error: error.message };
+    throw new Error(error.message);
   }
 
   revalidatePath("/evidence");
