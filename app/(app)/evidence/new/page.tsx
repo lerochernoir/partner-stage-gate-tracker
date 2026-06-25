@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-export default function NewEvidencePage() {
+import { createEvidenceAction } from "@/lib/actions/evidence";
+import { getPartners } from "@/lib/data/partners";
+
+export default async function NewEvidencePage() {
+  const partners = await getPartners();
+
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
@@ -21,28 +26,36 @@ export default function NewEvidencePage() {
         </Link>
       </div>
 
-      <form className="space-y-6 rounded-lg border p-6">
-
+      <form action={createEvidenceAction} className="space-y-6 rounded-lg border p-6">
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            Partner
-          </label>
-          <select className="w-full rounded-md border p-2">
-            <option>Select Partner...</option>
+          <label className="mb-2 block text-sm font-medium">Partner</label>
+          <select
+            name="partner_id"
+            required
+            className="w-full rounded-md border p-2"
+          >
+            <option value="">Select Partner...</option>
+            {partners.map((partner: any) => (
+              <option key={partner.id} value={partner.id}>
+                {partner.name}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            Stage
-          </label>
-          <select className="w-full rounded-md border p-2">
-            <option>SG0</option>
-            <option>SG1</option>
-            <option>SG2</option>
-            <option>SG3</option>
-            <option>SG4</option>
-            <option>SG5</option>
+          <label className="mb-2 block text-sm font-medium">Stage</label>
+          <select
+            name="stage_code"
+            required
+            className="w-full rounded-md border p-2"
+          >
+            <option value="SG0">SG0</option>
+            <option value="SG1">SG1</option>
+            <option value="SG2">SG2</option>
+            <option value="SG3">SG3</option>
+            <option value="SG4">SG4</option>
+            <option value="SG5">SG5</option>
           </select>
         </div>
 
@@ -50,22 +63,26 @@ export default function NewEvidencePage() {
           <label className="mb-2 block text-sm font-medium">
             Evidence Type
           </label>
-          <select className="w-full rounded-md border p-2">
-            <option>Architecture</option>
-            <option>Contract</option>
-            <option>Security</option>
-            <option>Financial</option>
-            <option>Customer Validation</option>
-            <option>Meeting Notes</option>
-            <option>Other</option>
+          <select
+            name="evidence_type"
+            required
+            className="w-full rounded-md border p-2"
+          >
+            <option value="architecture">Architecture</option>
+            <option value="contract">Contract</option>
+            <option value="security">Security</option>
+            <option value="financial">Financial</option>
+            <option value="customer_validation">Customer Validation</option>
+            <option value="meeting_notes">Meeting Notes</option>
+            <option value="other">Other</option>
           </select>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">
-            Title
-          </label>
+          <label className="mb-2 block text-sm font-medium">Title</label>
           <input
+            name="title"
+            required
             className="w-full rounded-md border p-2"
             placeholder="Architecture Review"
           />
@@ -76,6 +93,7 @@ export default function NewEvidencePage() {
             Description
           </label>
           <textarea
+            name="description"
             rows={5}
             className="w-full rounded-md border p-2"
           />
@@ -86,6 +104,8 @@ export default function NewEvidencePage() {
             Reference URL
           </label>
           <input
+            name="url"
+            type="url"
             className="w-full rounded-md border p-2"
             placeholder="https://sharepoint..."
           />
@@ -93,13 +113,12 @@ export default function NewEvidencePage() {
 
         <div className="flex justify-end">
           <button
-            type="button"
+            type="submit"
             className="rounded-md bg-slate-950 px-5 py-2 text-white hover:bg-slate-800"
           >
             Save Evidence
           </button>
         </div>
-
       </form>
     </div>
   );
