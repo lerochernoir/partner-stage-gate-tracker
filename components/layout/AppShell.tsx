@@ -30,13 +30,13 @@ export function AppShell({
       <aside className="border-r bg-slate-950 p-6 text-white">
         <div>
   <Image
-    src="/images/castlegate-logo.png"
-    alt="CastleGate"
-    width={210}
-    height={95}
-    priority
-    className="h-auto w-full max-w-[210px] object-contain"
-  />
+  src="/images/castlegate-logo.png"
+  alt="CastleGate"
+  width={105}
+  height={48}
+  priority
+  className="h-auto w-full max-w-[105px] object-contain"
+ />
   <p className="mt-2 text-sm text-slate-300">
     Partner Governance Platform
   </p>
