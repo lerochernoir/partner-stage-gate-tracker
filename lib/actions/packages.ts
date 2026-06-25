@@ -292,6 +292,18 @@ export async function updatePackageSectionAction(
     newValue: { status: parsed.data.content ? "complete" : "draft" },
   });
 
+  const draftTransition = await ensurePackageLeavesDraft(
+    supabase,
+    parsed.data.packageId,
+    parsed.data.content,
+  );
+  if (draftTransition.error) {
+    return {
+      success: "Section saved.",
+      statusError: `Section content saved, but the package status could not be updated: ${draftTransition.error}`,
+    };
+  }
+
   // The section content is now persisted. The package-status rollup is a
   // best-effort follow-up: if it fails, the content save must NOT be reported
   // as a failure. Surface a specific status-update error instead.
@@ -353,6 +365,19 @@ export async function autosavePackageSectionAction(input: {
 
   if (error) {
     return { error: error.message };
+  }
+
+  const draftTransition = await ensurePackageLeavesDraft(
+    supabase,
+    parsed.data.packageId,
+    parsed.data.content,
+  );
+  if (draftTransition.error) {
+    return {
+      success: "Section saved.",
+      sectionStatus,
+      statusError: `Section content saved, but the package status could not be updated: ${draftTransition.error}`,
+    };
   }
 
   // The section content is now persisted. The package-status rollup is a
@@ -536,12 +561,12 @@ async function recalculatePackageEditStatus(
     pkg.stage_gate_id,
     sections,
   );
-  const nextStatus =
-    sectionsComplete && !readinessError
-      ? "ready_for_review"
-      : hasAnyContent || pkg.status === "rework_required"
-        ? "in_progress"
-        : "draft";
+  const nextStatus = getNextPackageEditStatus({
+    currentStatus: pkg.status,
+    hasAnyContent,
+    sectionsComplete,
+    readinessComplete: !readinessError,
+  });
 
   if (nextStatus !== pkg.status) {
     const { error: updateError } = await supabase
@@ -553,6 +578,53 @@ async function recalculatePackageEditStatus(
   }
 
   return { status: nextStatus };
+}
+
+function getNextPackageEditStatus(input: {
+  currentStatus: string;
+  hasAnyContent: boolean;
+  sectionsComplete: boolean;
+  readinessComplete: boolean;
+}) {
+  if (!input.hasAnyContent) {
+    return "draft";
+  }
+
+  if (input.sectionsComplete && input.readinessComplete) {
+    return "ready_for_review";
+  }
+
+  if (
+    ["draft", "in_progress", "ready_for_review", "rework_required"].includes(
+      input.currentStatus,
+    )
+  ) {
+    return "in_progress";
+  }
+
+  return input.currentStatus;
+}
+
+async function ensurePackageLeavesDraft(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  packageId: string,
+  content: string,
+) {
+  if (!content.trim()) {
+    return {};
+  }
+
+  const { error } = await supabase
+    .from("stage_gate_packages")
+    .update({ status: "in_progress" })
+    .eq("id", packageId)
+    .eq("status", "draft");
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return {};
 }
 
 async function validateStageReadiness(
