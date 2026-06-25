@@ -28,18 +28,18 @@ export function AppShell({
   return (
     <div className="grid min-h-screen bg-muted/30 lg:grid-cols-[280px_1fr]">
       <aside className="border-r bg-slate-950 p-6 text-white">
-        <div className="flex flex-col items-center border-b border-white/10 pb-8">
+        <div className="flex flex-col items-center border-b border-white/10 pb-5">
           <Image
-            src="/images/castlegate-logo.png"
-            alt="CastleGate"
-            width={96}
-            height={96}
-            priority
-            className="h-auto w-[96px] object-contain"
-          />
+  src="/images/castlegate-logo.png"
+  alt="CastleGate"
+  width={112}
+  height={112}
+  priority
+  className="h-auto w-[112px] object-contain"
+/>
 
           <h1
-            className="mt-4 text-center text-xl font-bold tracking-[0.18em] text-white"
+            className="mt-1 text-center text-xl font-bold tracking-[0.18em] text-white"
             style={{
               fontFamily: '"Cinzel", "Old English Text MT", Georgia, serif',
             }}
@@ -47,13 +47,13 @@ export function AppShell({
             CastleGate
           </h1>
 
-          <p className="mt-3 text-center text-xs uppercase leading-5 tracking-[0.22em] text-slate-400">
+          <p className="mt-2 text-center text-xs uppercase leading-5 tracking-[0.22em] text-slate-400">
             Ecosystem Lifecycle
             <br />
             Management
           </p>
 
-          <p className="mt-2 text-center text-[11px] font-semibold tracking-[0.45em] text-slate-500">
+          <p className="mt-2 text-[10px] font-medium tracking-[0.55em] text-slate-600">
             ELM
           </p>
         </div>
