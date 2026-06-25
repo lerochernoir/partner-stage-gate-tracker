@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-export default function NewEvidencePage() {
+import { createEvidenceAction } from "@/lib/actions/evidence";
+import { getPartners } from "@/lib/data/partners";
+
+export default async function NewEvidencePage() {
+  const partners = await getPartners();
+
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
@@ -21,11 +26,66 @@ export default function NewEvidencePage() {
         </Link>
       </div>
 
-      <div className="rounded-lg border p-6">
-        <p className="text-sm text-muted-foreground">
-          Evidence creation is temporarily paused while the save action is fixed.
-        </p>
-      </div>
+      <form action={createEvidenceAction.bind(null, {})} className="space-y-6 rounded-lg border p-6">
+        <div>
+          <label className="mb-2 block text-sm font-medium">Partner</label>
+          <select name="partner_id" required className="w-full rounded-md border p-2">
+            <option value="">Select Partner...</option>
+            {partners.map((partner: any) => (
+              <option key={partner.id} value={partner.id}>
+                {partner.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Evidence Type</label>
+          <select name="evidence_type" required className="w-full rounded-md border p-2">
+            <option value="architecture">Architecture</option>
+            <option value="contract">Contract</option>
+            <option value="security">Security</option>
+            <option value="financial">Financial</option>
+            <option value="customer_validation">Customer Validation</option>
+            <option value="meeting_notes">Meeting Notes</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Title</label>
+          <input
+            name="title"
+            required
+            className="w-full rounded-md border p-2"
+            placeholder="Architecture Review"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Description</label>
+          <textarea name="description" rows={5} className="w-full rounded-md border p-2" />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Reference URL</label>
+          <input
+            name="url"
+            type="url"
+            className="w-full rounded-md border p-2"
+            placeholder="https://sharepoint..."
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="rounded-md bg-slate-950 px-5 py-2 text-white hover:bg-slate-800"
+          >
+            Save Evidence
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
