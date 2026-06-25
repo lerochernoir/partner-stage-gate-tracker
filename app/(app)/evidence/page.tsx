@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { getEvidence } from "@/lib/data/evidence";
 
 export default async function EvidencePage() {
@@ -5,14 +7,23 @@ export default async function EvidencePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Evidence Library
-        </h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Evidence Library
+          </h1>
 
-        <p className="mt-2 text-sm text-muted-foreground">
-          Central repository for governance evidence.
-        </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Central repository for governance evidence.
+          </p>
+        </div>
+
+        <Link
+          href="/evidence/new"
+          className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
+        >
+          + Add Evidence
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -41,12 +52,8 @@ export default async function EvidencePage() {
               evidence.map((item: any) => (
                 <tr key={item.id} className="border-t">
                   <td className="px-4 py-3">{item.title}</td>
-                  <td className="px-4 py-3">
-                    {item.partners?.name ?? "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {item.stage_gates?.code ?? "-"}
-                  </td>
+                  <td className="px-4 py-3">{item.partners?.name ?? "-"}</td>
+                  <td className="px-4 py-3">{item.stage_gates?.code ?? "-"}</td>
                   <td className="px-4 py-3">{item.evidence_type}</td>
                   <td className="px-4 py-3">{item.status}</td>
                 </tr>
