@@ -22,12 +22,6 @@ type AutosaveResult = PackageActionState & {
   packageStatus?: string;
 };
 
-const sectionUpdateSchema = z.object({
-  packageId: z.string().uuid(),
-  sectionId: z.string().uuid(),
-  content: z.string().trim(),
-});
-
 const sectionAutosaveSchema = z.object({
   packageId: z.string().uuid(),
   sectionId: z.string().uuid(),
@@ -102,96 +96,6 @@ async function createStageGatePackage(
   revalidatePath(`/partners/${partner.id}/packages`);
   revalidatePath(`/partners/${partner.id}`);
   return { packageId: result.packageId };
-}
-
-export async function updatePackageSectionAction(
-  _previousState: PackageActionState,
-  formData: FormData,
-): Promise<PackageActionState> {
-  const currentUser = await requireUser();
-  const parsed = sectionUpdateSchema.safeParse({
-    packageId: formData.get("packageId"),
-    sectionId: formData.get("sectionId"),
-    content: formData.get("content"),
-  });
-
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid package section." };
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data: rawPackage, error: packageError } = await supabase
-    .from("stage_gate_packages")
-    .select("id, status")
-    .eq("id", parsed.data.packageId)
-    .maybeSingle();
-
-  if (packageError) return { error: packageError.message };
-  const pkg = normalizePackageSubmissionJoin(rawPackage);
-  if (!pkg) return { error: "Package not found." };
-  if (!isEditablePackageStatus(pkg.status)) {
-    return { error: "Only draft or rework packages can be edited." };
-  }
-
-  const { data: existing } = await supabase
-    .from("stage_gate_package_sections")
-    .select("content, status")
-    .eq("id", parsed.data.sectionId)
-    .maybeSingle();
-
-  const { error } = await supabase
-    .from("stage_gate_package_sections")
-    .update({
-      content: parsed.data.content,
-      status: parsed.data.content ? "complete" : "draft",
-      updated_by: currentUser.id,
-    })
-    .eq("id", parsed.data.sectionId)
-    .eq("stage_gate_package_id", parsed.data.packageId);
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  await writeAuditEvent(supabase, {
-    actorUserId: currentUser.id,
-    entityType: "stage_gate_package_section",
-    entityId: parsed.data.sectionId,
-    action: "update",
-    oldValue: existing ?? null,
-    newValue: { status: parsed.data.content ? "complete" : "draft" },
-  });
-
-  const draftTransition = await ensurePackageLeavesDraft(
-    supabase,
-    parsed.data.packageId,
-    parsed.data.content,
-  );
-  if (draftTransition.error) {
-    return {
-      success: "Section saved.",
-      statusError: `Section content saved, but the package status could not be updated: ${draftTransition.error}`,
-    };
-  }
-
-  // The section content is now persisted. The package-status rollup is a
-  // best-effort follow-up: if it fails, the content save must NOT be reported
-  // as a failure. Surface a specific status-update error instead.
-  const statusResult = await recalculatePackageEditStatus(
-    supabase,
-    parsed.data.packageId,
-  );
-
-  revalidatePath(`/packages/${parsed.data.packageId}`);
-
-  if (statusResult.error) {
-    return {
-      success: "Section saved.",
-      statusError: `Section content saved, but the package status could not be updated: ${statusResult.error}`,
-    };
-  }
-
-  return { success: "Section saved." };
 }
 
 export async function autosavePackageSectionAction(input: {

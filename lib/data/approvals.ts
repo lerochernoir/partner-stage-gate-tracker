@@ -58,6 +58,19 @@ const approvalSelect = `
   final_decision
 `;
 
+export async function getApprovalsByPartnerId(partnerId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("approvals")
+    .select(approvalSelect)
+    .eq("partner_id", partnerId)
+    .order("requested_at", { ascending: false })
+    .returns<ApprovalBaseRow[]>();
+
+  if (error) throw error;
+  return hydrateApprovals(data ?? []);
+}
+
 export async function getApprovals() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
