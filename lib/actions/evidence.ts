@@ -21,12 +21,14 @@ export async function createEvidenceAction(formData: FormData) {
     evidence_type: evidenceType,
     title,
     description,
-    external_url: externalUrl,
+    external_url: externalUrl || null,
     status: "draft",
-    submitted_at: new Date().toISOString(),
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error("createEvidenceAction failed", error);
+    throw new Error(error.message);
+  }
 
   redirect("/evidence");
 }
