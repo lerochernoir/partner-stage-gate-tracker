@@ -1,4 +1,4 @@
-import { PageShell } from "@/components/ui/page-shell";
+import { PageShell } from "@/components/page-shell";
 
 export default function EvidencePage() {
   return (
