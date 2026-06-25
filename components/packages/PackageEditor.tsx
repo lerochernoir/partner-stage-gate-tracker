@@ -13,6 +13,7 @@ type EditableSection = PackageSectionRow & {
   localContent: string;
   saveState?: "idle" | "saving" | "saved" | "error";
   error?: string;
+  statusError?: string;
 };
 
 export function PackageEditor({
@@ -71,6 +72,7 @@ export function PackageEditor({
                   status: result.sectionStatus ?? section.status,
                   saveState: result.error ? "error" : "saved",
                   error: result.error,
+                  statusError: result.error ? undefined : result.statusError,
                 }
               : section,
           ),
@@ -183,6 +185,12 @@ export function PackageEditor({
               {activeSection.error ? (
                 <Alert variant="destructive">
                   <AlertDescription>{activeSection.error}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              {!activeSection.error && activeSection.statusError ? (
+                <Alert>
+                  <AlertDescription>{activeSection.statusError}</AlertDescription>
                 </Alert>
               ) : null}
             </div>
