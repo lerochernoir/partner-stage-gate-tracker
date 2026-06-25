@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function getEvidence() {
-  const supabase = await createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("evidence")
