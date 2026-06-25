@@ -1,4 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getCurrentPackagesByPartner,
+  getNextStepDue,
+} from "@/lib/packages/workflow";
 
 type DashboardPartnerRow = {
   id: string;
@@ -92,7 +96,13 @@ export async function getDashboardData() {
   const partners = (partnersResult.data ?? []).map(normalizePartner);
   const packages = packagesResult.data ?? [];
   const approvals = approvalsResult.data ?? [];
-  const currentPackages = getCurrentPackagesByPartner(partners, packages);
+  const currentPackages = getCurrentPackagesByPartner(
+    partners.map((partner) => ({
+      id: partner.id,
+      current_stage_id: partner.currentStageId,
+    })),
+    packages,
+  );
   const approvalsByPackageId = new Map(
     approvals.map((approval) => [approval.stage_gate_package_id, approval]),
   );
@@ -166,29 +176,6 @@ function normalizePartner(partner: DashboardPartnerRow) {
   };
 }
 
-function getCurrentPackagesByPartner(
-  partners: ReturnType<typeof normalizePartner>[],
-  packages: DashboardPackageRow[],
-) {
-  const partnerStage = new Map(
-    partners.map((partner) => [partner.id, partner.currentStageId]),
-  );
-  const map = new Map<string, DashboardPackageRow>();
-
-  for (const stagePackage of packages) {
-    if (partnerStage.get(stagePackage.partner_id) !== stagePackage.stage_gate_id) {
-      continue;
-    }
-
-    const existing = map.get(stagePackage.partner_id);
-    if (!existing || stagePackage.package_version > existing.package_version) {
-      map.set(stagePackage.partner_id, stagePackage);
-    }
-  }
-
-  return map;
-}
-
 function toPipelineRow(
   partner: ReturnType<typeof normalizePartner>,
   stagePackage: DashboardPackageRow | null,
@@ -215,29 +202,6 @@ function toPipelineRow(
     sortRank: hasPendingApproval ? 0 : hasInProgressPackage ? 1 : 2,
     createdAt: partner.createdAt,
   };
-}
-
-function getNextStepDue(
-  stagePackage: DashboardPackageRow | null,
-  approval: DashboardApprovalRow | null,
-) {
-  if (approval && ["submitted", "in_review"].includes(approval.status)) {
-    return "Now: review approval";
-  }
-
-  if (!stagePackage) {
-    return "Now: create package";
-  }
-
-  if (["draft", "in_progress", "rework_required"].includes(stagePackage.status)) {
-    return "Now: complete package";
-  }
-
-  if (stagePackage.status === "ready_for_review") {
-    return "Now: submit package";
-  }
-
-  return "Not scheduled";
 }
 
 function sortPipeline(a: ActivePipelineRow, b: ActivePipelineRow) {

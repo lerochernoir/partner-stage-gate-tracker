@@ -1,4 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getCurrentPackagesByPartner,
+  getNextStepDue,
+} from "@/lib/packages/workflow";
 import type { PartnerStatus } from "@/lib/supabase/types";
 
 export type PartnerListRow = {
@@ -54,52 +58,6 @@ export type PartnerDetail = PartnerListRow & {
   alliance_manager_id: string;
   executive_sponsor_id: string | null;
 };
-
-export async function getPartners(searchParams?: {
-  q?: string;
-  stage?: string;
-  status?: string;
-}) {
-  const supabase = await createSupabaseServerClient();
-  let query = supabase
-    .from("partners")
-    .select(
-      `
-        id,
-        name,
-        legal_name,
-        region,
-        status,
-        created_at,
-        stage_gates!partners_current_stage_id_fkey(id, code, name),
-        partner_tiers!partners_current_tier_id_fkey(id, code, name),
-        alliance_manager:users!partners_alliance_manager_id_fkey(id, name, email),
-        executive_sponsor:users!partners_executive_sponsor_id_fkey(id, name, email),
-        partner_type_assignments(
-          is_primary,
-          partner_types(id, code, name)
-        )
-      `,
-    )
-    .order("created_at", { ascending: false });
-
-  if (searchParams?.q) {
-    query = query.ilike("name", `%${searchParams.q}%`);
-  }
-
-  if (searchParams?.status) {
-    query = query.eq("status", searchParams.status as PartnerStatus);
-  }
-
-  if (searchParams?.stage) {
-    query = query.eq("current_stage_id", searchParams.stage);
-  }
-
-  const { data, error } = await query.returns<PartnerListRow[]>();
-
-  if (error) throw error;
-  return (data ?? []).map(normalizePartnerUsers);
-}
 
 export async function getPartnerWorkingList(
   filters: PartnerWorkingListFilters = {},
@@ -313,55 +271,6 @@ function nameFromEmail(email: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function getCurrentPackagesByPartner(
-  partners: Array<{ id: string; current_stage_id: string }>,
-  packages: Array<{
-    id: string;
-    partner_id: string;
-    stage_gate_id: string;
-    package_version: number;
-    status: string;
-  }>,
-) {
-  const partnerStage = new Map(
-    partners.map((partner) => [partner.id, partner.current_stage_id]),
-  );
-  const map = new Map<string, (typeof packages)[number]>();
-
-  for (const stagePackage of packages) {
-    if (partnerStage.get(stagePackage.partner_id) !== stagePackage.stage_gate_id) {
-      continue;
-    }
-
-    const existing = map.get(stagePackage.partner_id);
-    if (!existing || stagePackage.package_version > existing.package_version) {
-      map.set(stagePackage.partner_id, stagePackage);
-    }
-  }
-
-  return map;
-}
-
-function getNextStepDue(packageStatus: string, approvalStatus: string) {
-  if (["submitted", "in_review"].includes(approvalStatus)) {
-    return "Now: review approval";
-  }
-
-  if (packageStatus === "not_created") {
-    return "Now: create package";
-  }
-
-  if (["draft", "in_progress", "rework_required"].includes(packageStatus)) {
-    return "Now: complete package";
-  }
-
-  if (packageStatus === "ready_for_review") {
-    return "Now: submit package";
-  }
-
-  return "Not scheduled";
 }
 
 function matchesWorkingListFilters(

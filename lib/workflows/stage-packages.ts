@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ACTIVE_PACKAGE_STATUSES } from "@/lib/packages/status";
 
 type StagePackageWorkflowInput = {
   supabase: SupabaseClient;
@@ -22,7 +23,7 @@ export async function createDraftPackageForStage({
     .select("id, status")
     .eq("partner_id", partnerId)
     .eq("stage_gate_id", stageGateId)
-    .in("status", ["draft", "submitted", "in_review", "rework_required"])
+    .in("status", [...ACTIVE_PACKAGE_STATUSES])
     .limit(1)
     .maybeSingle();
 

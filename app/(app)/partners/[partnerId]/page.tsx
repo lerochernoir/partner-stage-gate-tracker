@@ -18,11 +18,15 @@ import {
   getPartnerStageHistory,
   getReadinessSummary,
 } from "@/lib/data/lifecycle";
-import { getApprovals } from "@/lib/data/approvals";
+import { getApprovalsByPartnerId, type ApprovalRow } from "@/lib/data/approvals";
 import { getPartnerDecisionLogs } from "@/lib/data/decisions";
 import { getPartnerById } from "@/lib/data/partners";
 import { getPartnerPackages, type PackageListRow } from "@/lib/data/packages";
 import { formatDateTime, humanize } from "@/lib/format";
+import {
+  getCurrentPackageForStage,
+  getNextStepDue,
+} from "@/lib/packages/workflow";
 
 type PartnerTab =
   | "overview"
@@ -43,12 +47,12 @@ export default async function PartnerDetailPage({
   const { partnerId } = await params;
   const { tab: rawTab } = await searchParams;
   const activeTab = normalizeTab(rawTab);
-  const [partner, requirements, packages, allApprovals, decisions, history] =
+  const [partner, requirements, packages, approvals, decisions, history] =
     await Promise.all([
       getPartnerById(partnerId),
       getPartnerCurrentRequirements(partnerId),
       getPartnerPackages(partnerId),
-      getApprovals(),
+      getApprovalsByPartnerId(partnerId),
       getPartnerDecisionLogs(partnerId),
       getPartnerStageHistory(partnerId),
     ]);
@@ -57,8 +61,7 @@ export default async function PartnerDetailPage({
     notFound();
   }
 
-  const approvals = allApprovals.filter((approval) => approval.partner_id === partner.id);
-  const currentPackage = getCurrentPackage(packages, partner.current_stage_id);
+  const currentPackage = getCurrentPackageForStage(packages, partner.current_stage_id);
   const currentApproval = currentPackage
     ? approvals.find((approval) => approval.stage_gate_package_id === currentPackage.id)
     : null;
@@ -397,7 +400,7 @@ function PackagesTab({
   );
 }
 
-function ApprovalsTab({ approvals }: { approvals: Awaited<ReturnType<typeof getApprovals>> }) {
+function ApprovalsTab({ approvals }: { approvals: ApprovalRow[] }) {
   return (
     <Card>
       <CardHeader>
@@ -483,37 +486,6 @@ function StageHistoryTab({ history }: { history: Awaited<ReturnType<typeof getPa
       </CardContent>
     </Card>
   );
-}
-
-function getCurrentPackage(packages: PackageListRow[], currentStageId: string) {
-  return (
-    packages
-      .filter((stagePackage) => stagePackage.stage_gate_id === currentStageId)
-      .sort((a, b) => b.package_version - a.package_version)[0] ?? null
-  );
-}
-
-function getNextStepDue(
-  stagePackage: PackageListRow | null,
-  approval: Awaited<ReturnType<typeof getApprovals>>[number] | null,
-) {
-  if (approval && ["submitted", "in_review"].includes(approval.status)) {
-    return "Now: review approval";
-  }
-
-  if (!stagePackage) {
-    return "Now: create package";
-  }
-
-  if (["draft", "in_progress", "rework_required"].includes(stagePackage.status)) {
-    return "Now: complete package";
-  }
-
-  if (stagePackage.status === "ready_for_review") {
-    return "Now: submit package";
-  }
-
-  return "Not scheduled";
 }
 
 function normalizeTab(tab?: string): PartnerTab {

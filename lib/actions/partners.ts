@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { writeAuditEvent } from "@/lib/audit";
 import { ROLE_CODES } from "@/lib/auth/roles";
 import { hasAnyRole, requireUser } from "@/lib/auth/session";
-import { initializeStageGatePackageForPartner } from "@/lib/actions/packages";
-import { getRegisteredTierId, getSg0StageId } from "@/lib/data/partners";
+import { getPartnerById, getRegisteredTierId, getSg0StageId } from "@/lib/data/partners";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { partnerFormSchema } from "@/lib/validation/partner";
 import { createDraftPackageForStage } from "@/lib/workflows/stage-packages";
@@ -106,12 +105,6 @@ export async function createPartnerAction(
     return { error: initError };
   }
 
-  const packageInitError = await initializeStageGatePackageForPartner(partner.id as string);
-
-  if (packageInitError) {
-    return { error: packageInitError };
-  }
-
   await supabase.from("partner_stage_history").insert({
     partner_id: partner.id,
     to_stage_id: sg0StageId,
@@ -169,6 +162,19 @@ export async function updatePartnerAction(
     return {
       error: parsed.error.issues[0]?.message ?? "Invalid partner details.",
     };
+  }
+
+  const partner = await getPartnerById(partnerId);
+  if (!partner) {
+    return { error: "Partner not found." };
+  }
+
+  const canEdit =
+    hasAnyRole(currentUser, [ROLE_CODES.systemAdmin]) ||
+    partner.alliance_manager_id === currentUser.id;
+
+  if (!canEdit) {
+    return { error: "You do not have permission to edit this partner." };
   }
 
   const supabase = await createSupabaseServerClient();
